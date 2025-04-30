@@ -13,8 +13,8 @@ import PlantDoctor from './pages/PlantDoctor'
 import PlantCare from './pages/PlantCare'
 import PlantationGuide from './pages/PlantationGuide'
 import Ecom from './pages/Ecom'
-import Home from './pages/Home'
 import CompanionPlanting from './pages/CompanionPlanting'
+import Footer from './compononts/Footer'
 
 const App = () => {
   return (
@@ -35,6 +35,7 @@ const App = () => {
         <Route path = '/plantationGuide' element ={<PlantationGuide/>}/>
         <Route path = '/Ecom' element = {<Ecom/>}/>
       </Routes>
+      <Footer/>
     </div>
   )
 }

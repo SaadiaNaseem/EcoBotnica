@@ -19,7 +19,9 @@ import drop_down from './down.png';
 import Hero_pic from './hero right.jpg';
 import HERO2 from './Plant watering.jpg';
 import Chat from './Chat.png';
-
+import Exchange_icon from './Exchange icon.png';
+import Quality from './Quality.png';
+import Customer from './Customer.png';
 export const assets = {
   plant1,
   plant2,
@@ -41,7 +43,10 @@ export const assets = {
   drop_down,
   Hero_pic,
   HERO2,
-  Chat
+  Chat,
+  Exchange_icon,
+  Customer,
+  Quality
 };
 
 export const products = [
