@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { assets } from "../assets/assets";
+import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
   const [isEcom, setIsEcom] = useState(false);
@@ -10,6 +11,9 @@ const Navbar = () => {
     setIsEcom(false); // Switch back to main navigation
     setVisible(false);
   };
+const {setShowSearch,getCartCount} = useContext (ShopContext);
+
+
 
   return (
     <div className="flex items-center justify-between py-5 font-medium">
@@ -69,7 +73,7 @@ const Navbar = () => {
 
       {/* Icons Section */}
       <div className="flex items-center gap-6">
-        <img src={assets.search} className="w-5 h-5 cursor-pointer" alt="Search" />
+        <img onClick={()=>setShowSearch(true)} src={assets.search} className="w-5 h-5 cursor-pointer" alt="Search" />
         <div className='group relative'>
           <img src={assets.profile_icon} className='w-5 h-5 cursor-pointer' alt="" />
           <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
@@ -84,7 +88,7 @@ const Navbar = () => {
         <Link to="/cart" className="relative">
           <img src={assets.cart_icon} className="w-5 min-w-5" alt="Cart" />
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">
-            10
+            {getCartCount()}
           </p>
         </Link>
         <img onClick={() => setVisible(true)} src={assets.menu_icon} className="w-5 h-5 cursor-pointer sm:hidden" alt="Menu" />
