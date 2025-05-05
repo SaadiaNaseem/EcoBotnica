@@ -22,6 +22,9 @@ import Chat from './Chat.png';
 import Exchange_icon from './Exchange icon.png';
 import Quality from './Quality.png';
 import Customer from './Customer.png';
+import cross from './cross.jpg';
+import star from './star.png';
+
 export const assets = {
   plant1,
   plant2,
@@ -37,6 +40,8 @@ export const assets = {
   logo,
   logoResized,
   search,
+  cross,
+  star,
   profile_icon,
   cart_icon,
   menu_icon,
