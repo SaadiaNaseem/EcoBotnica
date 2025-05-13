@@ -24,6 +24,9 @@ import Quality from './Quality.png';
 import Customer from './Customer.png';
 import cross from './cross.jpg';
 import star from './star.png';
+import Stripe from './stripe.png';
+import About from './about pic.jpeg';
+import Contact from './contact img.jpeg';
 
 export const assets = {
   plant1,
@@ -51,7 +54,10 @@ export const assets = {
   Chat,
   Exchange_icon,
   Customer,
-  Quality
+  Quality,
+  Stripe,
+  About,
+  Contact
 };
 
 export const products = [
