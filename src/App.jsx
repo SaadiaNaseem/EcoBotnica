@@ -44,6 +44,7 @@ const App = () => {
             </AiProvider>
           }
         />
+        <Route path='/plantationGuide' element={<PlantationGuide />} />
         <Route path='/Ecom' element={<Ecom />} />
       </Routes>
       <Footer />
