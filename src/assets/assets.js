@@ -27,6 +27,7 @@ import star from './star.png';
 import Stripe from './stripe.png';
 import About from './about pic.jpeg';
 import Contact from './contact img.jpeg';
+import PlantGuide from './plant guide.jpg';
 
 export const assets = {
   plant1,
@@ -57,7 +58,8 @@ export const assets = {
   Quality,
   Stripe,
   About,
-  Contact
+  Contact,
+  PlantGuide
 };
 
 export const products = [

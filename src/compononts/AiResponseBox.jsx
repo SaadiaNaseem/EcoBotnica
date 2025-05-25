@@ -9,7 +9,7 @@ const AiResponseBox = () => {
   if (!response) return null;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 bg-gray-50 border border-gray-300 rounded-lg shadow-sm whitespace-pre-wrap text-gray-800">
+    <div className="max-w-3xl max-h-[500px] mx-auto px-4 py-6 bg-gray-50  whitespace-pre-wrap text-gray-800">
       {response}
     </div>
   );

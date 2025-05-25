@@ -17,11 +17,15 @@ import Ecom from './pages/Ecom';
 import CompanionPlanting from './pages/CompanionPlanting';
 import Footer from './compononts/Footer';
 import Searchbar from './compononts/Searchbar';
-import { AiProvider } from './context/AiContext'
+import { AiProvider } from './context/AiContext';
+import ProfilePage from "./pages/ProfilePage"; 
+import { ToastContainer } from 'react-toastify';
+
 
 const App = () => {
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+       <ToastContainer />
       <Navbar />
       <Searchbar />
       <Routes>
@@ -46,6 +50,7 @@ const App = () => {
         />
         <Route path='/plantationGuide' element={<PlantationGuide />} />
         <Route path='/Ecom' element={<Ecom />} />
+        <Route path='/profilePage' element={<ProfilePage />} />
       </Routes>
       <Footer />
     </div>
