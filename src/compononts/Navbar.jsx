@@ -11,14 +11,21 @@ const Navbar = () => {
     setIsEcom(false); // Switch back to main navigation
     setVisible(false);
   };
-const {setShowSearch,getCartCount} = useContext (ShopContext);
+  const { setShowSearch, getCartCount, navigate, token, setToken, setCartItems } = useContext(ShopContext);
 
 
+  const logout = () => {
+    navigate('/login')
+
+    localStorage.removeItem('token')
+    setToken('')
+    setCartItems({})
+  }
 
   return (
     <div className="flex items-center justify-between py-5 font-medium">
       {/* Logo */}
-      <Link to ='/'><img src={assets.logoResized} className="w-5 h-5" alt="Logo" /></Link>
+      <Link to='/' onClick={handleMainNavClick}><img src={assets.logoResized} className="w-5 h-5" alt="Logo" /></Link>
 
       {/* Desktop Navigation */}
       <ul className="hidden sm:flex gap-5 text-sm text-black">
@@ -51,16 +58,16 @@ const {setShowSearch,getCartCount} = useContext (ShopContext);
           </>
         ) : (
           <>
-            <NavLink to="/" className="flex flex-col items-center gap-1" onClick={handleMainNavClick}>
-              <p>Main</p>
-              <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
-            </NavLink>
             <NavLink to="/Ecom" className="flex flex-col items-center gap-1">
               <p>E-com</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
             <NavLink to="/collection" className="flex flex-col items-center gap-1">
               <p>COLLECTION</p>
+              <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
+            </NavLink>
+            <NavLink to="/aboutUs" className="flex flex-col items-center gap-1">
+              <p>ABOUT US</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
             <NavLink to="/contacts" className="flex flex-col items-center gap-1">
@@ -73,16 +80,23 @@ const {setShowSearch,getCartCount} = useContext (ShopContext);
 
       {/* Icons Section */}
       <div className="flex items-center gap-6">
-        <img onClick={()=>setShowSearch(true)} src={assets.search} className="w-5 h-5 cursor-pointer" alt="Search" />
+        <img onClick={() => setShowSearch(true)} src={assets.search} className="w-5 h-5 cursor-pointer" alt="Search" />
         <div className='group relative'>
-          <img src={assets.profile_icon} className='w-5 h-5 cursor-pointer' alt="" />
+
+          <img onClick={() => token ? null : navigate('/login')} src={assets.profile_icon} className='w-5 h-5 cursor-pointer' alt="" />
+
+          {/* Dropdown */}
+
+          {token && 
           <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
             <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-600 rounded shadow-md'>
-              <p className='cursor-pointer hover:text-black'>My Profile</p>
-              <p className='cursor-pointer hover:text-black'>Orders</p>
-              <p className='cursor-pointer hover:text-black'>Logout</p>
+              <NavLink to="/profilePage">
+                <p className='cursor-pointer hover:text-black text-gray-800'>My Profile</p>
+              </NavLink>
+              <p onClick={()=>navigate('/orders')} className='cursor-pointer hover:text-black'>Orders</p>
+              <p onClick={logout} className='cursor-pointer hover:text-black'>Logout</p>
             </div>
-          </div>
+          </div>}
         </div>
         {!isEcom && <img src={assets.Chat} className="w-5 h-5 cursor-pointer" alt="Chat" />}
         <Link to="/cart" className="relative">
@@ -104,14 +118,14 @@ const {setShowSearch,getCartCount} = useContext (ShopContext);
             </div>
             {isEcom ? (
               <>
-                <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/">
-                  Main
-                </NavLink>
                 <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/Ecom">
                   E-com
                 </NavLink>
                 <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/collection">
                   COLLECTIONS
+                </NavLink>
+                <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/aboutUs">
+                  ABOUT US
                 </NavLink>
                 <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/contacts">
                   CONTACT-US
