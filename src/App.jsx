@@ -20,7 +20,7 @@ import Searchbar from './compononts/Searchbar';
 import { AiProvider } from './context/AiContext';
 import ProfilePage from "./pages/ProfilePage"; 
 import { ToastContainer } from 'react-toastify';
-
+import VerifyPage from './pages/VerifyPage';
 
 const App = () => {
   return (
@@ -51,6 +51,8 @@ const App = () => {
         <Route path='/plantationGuide' element={<PlantationGuide />} />
         <Route path='/Ecom' element={<Ecom />} />
         <Route path='/profilePage' element={<ProfilePage />} />
+        <Route path='/verify' element={<VerifyPage />} />
+
       </Routes>
       <Footer />
     </div>

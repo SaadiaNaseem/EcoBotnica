@@ -74,6 +74,12 @@ const Navbar = () => {
               <p>CONTACT-US</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
+            <button
+              onClick={() => window.location.href = 'http://localhost:5174'}
+              className="bg-green-300 text-white px-4 py-1 rounded hover:bg-green-400 transition ml-8"
+            >
+              Login as Admin
+            </button>
           </>
         )}
       </ul>
@@ -87,16 +93,16 @@ const Navbar = () => {
 
           {/* Dropdown */}
 
-          {token && 
-          <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
-            <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-600 rounded shadow-md'>
-              <NavLink to="/profilePage">
-                <p className='cursor-pointer hover:text-black text-gray-800'>My Profile</p>
-              </NavLink>
-              <p onClick={()=>navigate('/orders')} className='cursor-pointer hover:text-black'>Orders</p>
-              <p onClick={logout} className='cursor-pointer hover:text-black'>Logout</p>
-            </div>
-          </div>}
+          {token &&
+            <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
+              <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-600 rounded shadow-md'>
+                <NavLink to="/profilePage">
+                  <p className='cursor-pointer hover:text-black text-gray-800'>My Profile</p>
+                </NavLink>
+                <p onClick={() => navigate('/orders')} className='cursor-pointer hover:text-black'>Orders</p>
+                <p onClick={logout} className='cursor-pointer hover:text-black'>Logout</p>
+              </div>
+            </div>}
         </div>
         {!isEcom && <img src={assets.Chat} className="w-5 h-5 cursor-pointer" alt="Chat" />}
         <Link to="/cart" className="relative">
