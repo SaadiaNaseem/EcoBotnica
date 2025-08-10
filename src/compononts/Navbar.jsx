@@ -25,12 +25,16 @@ const Navbar = () => {
   return (
     <div className="flex items-center justify-between py-5 font-medium">
       {/* Logo */}
-      <Link to='/' onClick={handleMainNavClick}><img src={assets.logoResized} className="w-5 h-5" alt="Logo" /></Link>
+      <Link to='/UserDashboard' onClick={handleMainNavClick}><img src={assets.logoResized} className="w-5 h-5" alt="Logo" /></Link>
 
       {/* Desktop Navigation */}
       <ul className="hidden sm:flex gap-5 text-sm text-black">
         {!isEcom ? (
           <>
+          <NavLink to="/UserDashboard" className="flex flex-col items-center gap-1" onClick={handleMainNavClick}>
+              <p>Dashboard</p>
+              <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
+            </NavLink>
             <NavLink to="/" className="flex flex-col items-center gap-1" onClick={handleMainNavClick}>
               <p>Plant Identification</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
@@ -139,6 +143,9 @@ const Navbar = () => {
               </>
             ) : (
               <>
+              <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/UserDashboard">
+                  Dashboard
+                </NavLink>
                 <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/">
                   Plant Identification
                 </NavLink>

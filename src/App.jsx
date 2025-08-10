@@ -21,6 +21,9 @@ import { AiProvider } from './context/AiContext';
 import ProfilePage from "./pages/ProfilePage"; 
 import { ToastContainer } from 'react-toastify';
 import VerifyPage from './pages/VerifyPage';
+import UserDashboard from './pages/userDashboard';
+import PlantProfile from './pages/PlantProfile';
+import AddNewPlantProfile from './pages/AddNewPlantProfile';
 
 const App = () => {
   return (
@@ -29,6 +32,9 @@ const App = () => {
       <Navbar />
       <Searchbar />
       <Routes>
+        <Route path='/UserDashboard' element={<UserDashboard />}/>
+        <Route path='/PlantProfile' element={<PlantProfile/>}/>
+        <Route path="/addnewplantprofile" element={<AddNewPlantProfile />} />
         <Route path='/collection' element={<Collection />} />
         <Route path='/contacts' element={<Contacts />} />
         <Route path='/product/:productId' element={<Product />} />
