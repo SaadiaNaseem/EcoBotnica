@@ -78,12 +78,12 @@ const Navbar = () => {
               <p>CONTACT-US</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
-            <button
+            {/* <button
               onClick={() => window.location.href = 'http://localhost:5174'}
               className="bg-green-300 text-white px-4 py-1 rounded hover:bg-green-400 transition ml-8"
             >
               Login as Admin
-            </button>
+            </button> */}
           </>
         )}
       </ul>
