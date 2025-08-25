@@ -31,7 +31,7 @@ const Navbar = () => {
       <ul className="hidden sm:flex gap-5 text-sm text-black">
         {!isEcom ? (
           <>
-          <NavLink to="/UserDashboard" className="flex flex-col items-center gap-1" onClick={handleMainNavClick}>
+            <NavLink to="/UserDashboard" className="flex flex-col items-center gap-1" onClick={handleMainNavClick}>
               <p>Dashboard</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
@@ -108,7 +108,17 @@ const Navbar = () => {
               </div>
             </div>}
         </div>
-        {!isEcom && <img src={assets.Chat} className="w-5 h-5 cursor-pointer" alt="Chat" />}
+        {/* {!isEcom && <img src={assets.Chat} className="w-5 h-5 cursor-pointer" alt="Chat" />} */}
+
+        {!isEcom && (
+          <Link to="/CommunityChat">
+            <img
+              src={assets.Chat}
+              className="w-5 h-5 cursor-pointer"
+              alt="Community Chat"
+            />
+          </Link>
+        )}
         <Link to="/cart" className="relative">
           <img src={assets.cart_icon} className="w-5 min-w-5" alt="Cart" />
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">
@@ -143,7 +153,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-              <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/UserDashboard">
+                <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/UserDashboard">
                   Dashboard
                 </NavLink>
                 <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/">
