@@ -106,6 +106,9 @@ const Login = () => {
   const msg = location.state?.msg || "";
 
   const onSubmitHandler = async (event) => {
+
+    console.log("Form submitted");
+
     event.preventDefault();
     try {
       if (currentState === 'Sign up') {
