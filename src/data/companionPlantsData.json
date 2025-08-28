@@ -1,0 +1,147 @@
+[
+  {
+    "name": "Tomato",
+    "goodCompanions": ["Basil", "Carrot", "Onion", "Parsley", "Marigold", "Chives", "Garlic", "Asparagus"],
+    "badCompanions": ["Cabbage", "Corn", "Potato", "Fennel", "Broccoli", "Brussels Sprouts"]
+  },
+  {
+    "name": "Carrot",
+    "goodCompanions": ["Tomato", "Lettuce", "Chives", "Rosemary", "Leek", "Peas", "Sage"],
+    "badCompanions": ["Dill", "Parsnip", "Fennel", "Celery", "Cabbage"]
+  },
+  {
+    "name": "Cucumber",
+    "goodCompanions": ["Beans", "Corn", "Peas", "Radish", "Sunflower", "Lettuce", "Dill"],
+    "badCompanions": ["Potato", "Aromatic Herbs", "Sage", "Basil", "Melon"]
+  },
+  {
+    "name": "Spinach",
+    "goodCompanions": ["Peas", "Radish", "Strawberry", "Celery", "Onion", "Cabbage", "Cauliflower"],
+    "badCompanions": ["Potato", "Fennel", "Melon", "Corn", "Sunflower"]
+  },
+  {
+    "name": "Potato",
+    "goodCompanions": ["Beans", "Cabbage", "Corn", "Horseradish", "Marigold", "Basil", "Onion"],
+    "badCompanions": ["Tomato", "Cucumber", "Pumpkin", "Sunflower", "Raspberry"]
+  },
+  {
+    "name": "Basil",
+    "goodCompanions": ["Tomato", "Peppers", "Oregano", "Chives", "Marigold", "Asparagus", "Beets"],
+    "badCompanions": ["Rue", "Sage", "Thyme", "Rosemary", "Cucumber"]
+  },
+  {
+    "name": "Lettuce",
+    "goodCompanions": ["Carrot", "Radish", "Cucumber", "Strawberry", "Beets", "Onion", "Garlic"],
+    "badCompanions": ["Parsley", "Celery", "Sunflower", "Kale"]
+  },
+  {
+    "name": "Peas",
+    "goodCompanions": ["Carrot", "Cucumber", "Radish", "Spinach", "Turnip", "Corn", "Lettuce"],
+    "badCompanions": ["Onion", "Garlic", "Leek", "Chives", "Shallots"]
+  },
+  {
+    "name": "Onion",
+    "goodCompanions": ["Carrot", "Beets", "Strawberry", "Lettuce", "Spinach", "Chamomile", "Tomato"],
+    "badCompanions": ["Peas", "Beans", "Asparagus", "Sage"]
+  },
+  {
+    "name": "Garlic",
+    "goodCompanions": ["Tomato", "Carrot", "Beets", "Lettuce", "Celery", "Chamomile", "Rose"],
+    "badCompanions": ["Beans", "Peas", "Strawberry", "Asparagus"]
+  },
+  {
+    "name": "Beets",
+    "goodCompanions": ["Onion", "Cabbage", "Lettuce", "Radish", "Basil", "Mint"],
+    "badCompanions": ["Pole Beans", "Field Mustard", "Charlock"]
+  },
+  {
+    "name": "Cabbage",
+    "goodCompanions": ["Onion", "Garlic", "Potato", "Celery", "Beets", "Chamomile", "Dill"],
+    "badCompanions": ["Tomato", "Strawberry", "Grapes"]
+  },
+  {
+    "name": "Cauliflower",
+    "goodCompanions": ["Celery", "Dill", "Onion", "Peas", "Spinach", "Nasturtium"],
+    "badCompanions": ["Strawberry", "Tomato", "Grapes"]
+  },
+  {
+    "name": "Broccoli",
+    "goodCompanions": ["Beets", "Celery", "Chamomile", "Potato", "Onion", "Mint"],
+    "badCompanions": ["Tomato", "Strawberry", "Pole Beans"]
+  },
+  {
+    "name": "Corn",
+    "goodCompanions": ["Cucumber", "Peas", "Beans", "Pumpkin", "Melon", "Radish"],
+    "badCompanions": ["Tomato", "Celery", "Brassicas"]
+  },
+  {
+    "name": "Marigold",
+    "goodCompanions": ["Tomato", "Potato", "Basil", "Cabbage", "Melon"],
+    "badCompanions": ["Beans"]
+  },
+  {
+    "name": "Asparagus",
+    "goodCompanions": ["Basil", "Tomato", "Parsley", "Coriander", "Marigold"],
+    "badCompanions": ["Onion", "Garlic"]
+  },
+  {
+    "name": "Parsley",
+    "goodCompanions": ["Tomato", "Asparagus", "Carrot", "Chives"],
+    "badCompanions": ["Lettuce", "Mint"]
+  },
+  {
+    "name": "Mint",
+    "goodCompanions": ["Cabbage", "Broccoli", "Brussels Sprouts", "Tomato"],
+    "badCompanions": ["Parsley", "Chamomile"]
+  },
+  {
+    "name": "Brussels Sprouts",
+    "goodCompanions": ["Onion", "Garlic", "Mint", "Nasturtium"],
+    "badCompanions": ["Tomato", "Strawberry"]
+  },
+  {
+    "name": "Radish",
+    "goodCompanions": ["Spinach", "Lettuce", "Cucumber", "Carrot", "Peas"],
+    "badCompanions": ["Hyssop"]
+  },
+  {
+    "name": "Rosemary",
+    "goodCompanions": ["Carrot", "Sage", "Bean", "Broccoli"],
+    "badCompanions": ["Potato", "Cucumber"]
+  },
+  {
+    "name": "Celery",
+    "goodCompanions": ["Cabbage", "Cauliflower", "Spinach", "Onion", "Garlic"],
+    "badCompanions": ["Corn", "Lettuce"]
+  },
+  {
+    "name": "Strawberry",
+    "goodCompanions": ["Spinach", "Bean", "Thyme", "Borage"],
+    "badCompanions": ["Cabbage", "Broccoli", "Cauliflower"]
+  },
+  {
+    "name": "Pumpkin",
+    "goodCompanions": ["Corn", "Beans", "Radish", "Nasturtium"],
+    "badCompanions": ["Potato"]
+  },
+  {
+    "name": "Watermelon",
+    "goodCompanions": ["Corn", "Radish", "Nasturtium"],
+    "badCompanions": ["Potato"]
+  },
+  {
+    "name": "Leek",
+    "goodCompanions": ["Carrot", "Onion", "Celery", "Cabbage"],
+    "badCompanions": ["Peas", "Beans"]
+  },
+  {
+    "name": "Turnip",
+    "goodCompanions": ["Peas", "Onion", "Garlic"],
+    "badCompanions": ["Potato"]
+  },
+  {
+    "name": "Thyme",
+    "goodCompanions": ["Strawberry", "Cabbage"],
+    "badCompanions": ["Basil"]
+  }
+]
