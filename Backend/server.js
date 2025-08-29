@@ -56,8 +56,11 @@ import cartRouter from "./routes/cartRouter.js";
 import orderRouter from "./routes/orderRouter.js";
 
 // Community chat models
-import Message from "../models/Message.js";
-import Report from "../models/Report.js";
+import Message from "./models/message.js";
+import Report from "./models/report.js";
+
+//plant care page related 
+import plantCareRoutes from "./routes/plantCareRoutes.js";
 
 // App Config
 const app = express();
@@ -87,6 +90,8 @@ app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/plantcare", plantCareRoutes);
+
 
 // Community Chat REST API
 app.get("/api/messages", async (req, res) => {

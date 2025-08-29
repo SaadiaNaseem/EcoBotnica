@@ -25,6 +25,7 @@
     "razorpay": "^2.9.6",
     "react-toastify": "^11.0.5",
     "socket.io": "^4.8.1",
+    "sparse-bitfield": "^3.0.3",
     "stripe": "^18.4.0",
     "validator": "^13.15.15"
   }

@@ -1,27 +1,42 @@
-import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import React, { useEffect, useState } from "react";
 import { Droplet, Leaf, Bot, Send } from "lucide-react";
 import Title from "../compononts/Title";
-import CalendarTracker from "../compononts/Calendertracker";
+import CalendarTracker from "../compononts/CalenderTracker";
 import SetAlarmForm from "../compononts/SetAlarmForm";
-
+import api from "../api/axios";
 
 const PlantCare = () => {
-  const [date, setDate] = useState(new Date());
-  const [activity, setActivity] = useState("Watering");
-  const [frequency, setFrequency] = useState("Daily");
-  const [showChatbot, setShowChatbot] = useState(false);
-  const [time1, setTime1] = useState("");
-  const [time2, setTime2] = useState("");
   const [alarmData, setAlarmData] = useState([]);
-
-
-  const [chatMessages, setChatMessages] = useState([
-    { sender: "user", text: "When to water basil?" },
-    { sender: "bot", text: "Water basil every 2–3 days." },
-  ]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
+  const userId = localStorage.getItem("userId");
+
+  useEffect(() => {
+    fetchAlarms();
+    fetchActivityLogs();
+  }, []);
+
+  const fetchAlarms = async () => {
+    try {
+      const res = await api.get(`/plantcare/alarms/${userId}`);
+      setAlarmData(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching alarms", err);
+      setAlarmData([]);
+    }
+  };
+
+  const fetchActivityLogs = async () => {
+    try {
+      const res = await api.get(`/plantcare/activity/${userId}`);
+      setActivityLogs(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching activities", err);
+      setActivityLogs([]);
+    }
+  };
 
   const toggleChatbot = () => setShowChatbot(!showChatbot);
 
@@ -33,7 +48,7 @@ const PlantCare = () => {
     setTimeout(() => {
       setChatMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Bot reply to: ${userMessage.text}" },
+        { sender: "bot", text: `Bot reply to: ${userMessage.text}` },
       ]);
     }, 500);
   };
@@ -50,56 +65,14 @@ const PlantCare = () => {
   };
 
   const weatherData = [
-    "☀ Sunny", "⛅ Partly Cloudy", "🌧 Rainy",
-    "🌤 Clear", "🌦 Light Showers", "☁ Cloudy", "🌧 Thunderstorms"
+    "☀ Sunny",
+    "⛅ Partly Cloudy",
+    "🌧 Rainy",
+    "🌤 Clear",
+    "🌦 Light Showers",
+    "☁ Cloudy",
+    "🌧 Thunderstorms",
   ];
-
-  const renderFrequencyOptions = () => {
-    return (
-      <>
-        <label className="block text-gray-700">Frequency</label>
-        <select
-          value={frequency}
-          onChange={(e) => setFrequency(e.target.value)}
-          className="w-full p-2 border rounded-md"
-        >
-          {activity === "Watering" ? (
-            <>
-              <option>Daily</option>
-              <option>2 times a day</option>
-              <option>Weekly</option>
-            </>
-          ) : (
-            <>
-              <option>Weekly</option>
-              <option>After 2 weeks</option>
-              <option>Monthly</option>
-            </>
-          )}
-        </select>
-      </>
-    );
-  };
-
-  const renderTimeInputs = () => {
-    if (activity === "Watering" && frequency === "2 times a day") {
-      return (
-        <>
-          <label className="block text-gray-700">Time 1</label>
-          <input type="time" className="w-full p-2 border rounded-md" value={time1} onChange={(e) => setTime1(e.target.value)} />
-          <label className="block text-gray-700">Time 2</label>
-          <input type="time" className="w-full p-2 border rounded-md" value={time2} onChange={(e) => setTime2(e.target.value)} />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <label className="block text-green-800">Time</label>
-          <input type="time" className="w-full p-2 border rounded-md" value={time1} onChange={(e) => setTime1(e.target.value)} />
-        </>
-      );
-    }
-  };
 
   return (
     <div className="py-12 bg-[#F4FFF4] min-h-screen p-6 relative">
@@ -110,45 +83,7 @@ const PlantCare = () => {
       <div className="flex flex-col md:flex-row">
         {/* Left */}
         <div className="w-full md:w-1/2 space-y-6 mt-6 md:mt-0 md:pl-6">
-          {/* Set Alarm */}
-          <div className="bg-white p-6 rounded-2xl shadow-md w-full">
-            <h2 className="text-xl font-semibold text-green-800 mb-4">Set Alarm</h2>
-            <SetAlarmForm/>
-          </div>
-
-          {/* Activity Tracker */}
-          <div className="bg-white p-6 rounded-2xl shadow-md w-full">
-            <h2 className="text-xl font-semibold ext-green-800 mb-4">Activity Tracker</h2>
-            <ul className="list-disc list-inside text-gray-700 space-y-2">
-              {alarmData.map((item, index) => (
-                <li key={index}>
-                  {item.activity === "Watering" && (
-                    <>
-                      <Droplet className="inline-block mr-2" />
-                      Watering scheduled on <strong>{item.date}</strong>{" "}
-                      {item.times.length > 0 && (
-                        <span>{`at ${item.times.join(" & ")}`}</span>
-                      )}
-                    </>
-                  )}
-                  {item.activity === "Pruning" && (
-                    <>
-                      <Leaf className="inline-block mr-2" />
-                      Pruning on <strong>{item.date}</strong>
-                    </>
-                  )}
-                  {item.activity === "Fertilizing" && (
-                    <>
-                      <Leaf className="inline-block mr-2" />
-                      Fertilizing due on <strong>{item.date}</strong>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Calendar */}
+          <SetAlarmForm setAlarmData={setAlarmData} />
           <div className="bg-white p-6 rounded-2xl shadow-md w-full">
             <h2 className="text-xl font-semibold text-green-800 mb-4">Calendar</h2>
             <p className="text-gray-700 mb-2 font-medium">
@@ -160,20 +95,55 @@ const PlantCare = () => {
 
         {/* Right */}
         <div className="w-full md:w-1/2 space-y-6 ml-[10px] relative">
-          {/* Weather Update */}
+          {/* Weather */}
           <div className="bg-white p-6 rounded-2xl shadow-md w-full">
             <h2 className="text-xl font-semibold text-green-800 mb-4">Weekly Weather Update</h2>
-            <p className="text-gray-700 mb-2 font-medium">Today: {new Date().toDateString()}</p>
+            <p className="text-gray-700 mb-2 font-medium">
+              Today: {new Date().toDateString()}
+            </p>
             <ul className="space-y-2 text-gray-700">
-              {getNext7Days().map((day, index) => (
-                <li key={index} className="flex justify-between border-b pb-1">
+              {getNext7Days().map((day, i) => (
+                <li key={i} className="flex justify-between border-b pb-1">
                   <span>{day}</span>
-                  <span>{weatherData[index % weatherData.length]}</span>
+                  <span>{weatherData[i % weatherData.length]}</span>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Activity Tracker */}
+          <div className="bg-white p-6 rounded-2xl shadow-md w-full">
+            <h2 className="text-xl font-semibold text-green-800 mb-4">Activity Tracker</h2>
+            <ul className="list-disc list-inside text-gray-700 space-y-2">
+              {activityLogs.map((item, i) => (
+                <li key={i}>
+                  {item.activity === "Watering" && (
+                    <>
+                      <Droplet className="inline-block mr-2" /> Watering on{" "}
+                      <strong>{new Date(item.timestamp || item.date).toDateString()}</strong>
+                    </>
+                  )}
+                  {item.activity === "Pruning" && (
+                    <>
+                      <Leaf className="inline-block mr-2" /> Pruning on{" "}
+                      <strong>{new Date(item.timestamp || item.date).toDateString()}</strong>
+                    </>
+                  )}
+                  {item.activity === "Fertilizing" && (
+                    <>
+                      <Leaf className="inline-block mr-2" /> Fertilizing on{" "}
+                      <strong>{new Date(item.timestamp || item.date).toDateString()}</strong>
+                    </>
+                  )}
+                  {item.status === "missed" && (
+                    <span className="text-red-600 ml-2">(Missed)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Chatbot */}
           {!showChatbot && (
             <div className="bg-white p-6 rounded-2xl shadow-md w-full flex flex-col items-center text-center">
               <img
@@ -182,23 +152,26 @@ const PlantCare = () => {
                 className="w-56 h-56 mb-4 animate-zoom-in-out"
               />
               <p className="text-gray-700 text-sm font-medium">
-                Need help? Try asking the chatbot:<br />
-                <span className="italic text-green-800">“In Islamabad, I want to grow tomatoes. When's the best time?”</span>
+                Need help? Try asking the chatbot:
+                <br />
+                <span className="italic text-green-800">
+                  “In Islamabad, I want to grow tomatoes. When's the best time?”
+                </span>
               </p>
             </div>
           )}
-
           {showChatbot && (
             <div className="bg-white p-6 rounded-2xl shadow-md w-full">
               <h2 className="text-xl font-semibold text-green-800 mb-4">Chatbot</h2>
               <div className="h-96 overflow-y-auto bg-[#f0f0f0] p-4 rounded-md mb-2 space-y-2">
-                {chatMessages.map((msg, index) => (
+                {chatMessages.map((msg, i) => (
                   <div
-                    key={index}
-                    className={`p-2 rounded-md max-w-[80%] ${msg.sender === "user"
-                      ? "bg-green-700 text-white ml-auto"
-                      : "bg-gray-300 text-black border-l-4 border-green-700"
-                      }`}
+                    key={i}
+                    className={`p-2 rounded-md max-w-[80%] ${
+                      msg.sender === "user"
+                        ? "bg-green-700 text-white ml-auto"
+                        : "bg-gray-300 text-black border-l-4 border-green-700"
+                    }`}
                   >
                     {msg.text}
                   </div>
