@@ -105,34 +105,120 @@ const Login = () => {
   const location = useLocation();
   const msg = location.state?.msg || "";
 
-  const onSubmitHandler = async (event) => {
+  // const onSubmitHandler = async (event) => {
 
-    console.log("Form submitted");
+  //   console.log("Form submitted");
 
-    event.preventDefault();
-    try {
-      if (currentState === 'Sign up') {
-        const response = await axios.post(backendUrl + '/api/user/register', { name, email, password })
-        if (response.data.success) {
-          setToken(response.data.token)
-          localStorage.setItem('token', response.data.token)
-        } else {
-          toast.error(response.data.message)
+  //   event.preventDefault();
+  //   try {
+  //     if (currentState === 'Sign up') {
+  //       const response = await axios.post(backendUrl + '/api/user/register', { name, email, password })
+  //       if (response.data.success) {
+  //         setToken(response.data.token)
+  //         localStorage.setItem('token', response.data.token)
+  //       } else {
+  //         toast.error(response.data.message)
+  //       }
+  //     } else {
+  //       const response = await axios.post(backendUrl + '/api/user/login', { email, password })
+  //       if (response.data.success) {
+  //         setToken(response.data.token)
+  //         localStorage.setItem('token', response.data.token)
+  //       } else {
+  //         toast.error(response.data.message)
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.log(error)
+  //     toast.error(error.message)
+  //   }
+  // }
+
+
+// 
+
+
+// const onSubmitHandler = async (event) => {
+//   console.log("Form submitted");
+//   event.preventDefault();
+//   try {
+//     if (currentState === 'Sign up') {
+//       const response = await axios.post(backendUrl + '/api/user/register', { name, email, password });
+//       if (response.data.success) {
+//         setToken(response.data.token);
+//         localStorage.setItem('token', response.data.token);
+
+//         // 🆕 Save user as well
+//         if (response.data.user) {
+//           localStorage.setItem('user', JSON.stringify(response.data.user));
+
+//         }
+
+//       } else {
+//         toast.error(response.data.message);
+//       }
+//     } else {
+//       const response = await axios.post(backendUrl + '/api/user/login', { email, password });
+//       if (response.data.success) {
+//         setToken(response.data.token);
+//         localStorage.setItem('token', response.data.token);
+
+//         // 🆕 Save user as well
+//         if (response.data.user) {
+//           localStorage.setItem('user', JSON.stringify(response.data.user));
+//         }
+
+//       } else {
+//         toast.error(response.data.message);
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     toast.error(error.message);
+//   }
+// };
+
+const onSubmitHandler = async (event) => {
+  console.log("Form submitted");
+  event.preventDefault();
+  try {
+    if (currentState === 'Sign up') {
+      const response = await axios.post(backendUrl + '/api/user/register', { name, email, password });
+      console.log("Register Response:", response.data);  // Debugging log
+      if (response.data.success) {
+        setToken(response.data.token);
+        localStorage.setItem('token', response.data.token);
+
+        // Save user as well
+        if (response.data.user) {
+          console.log("Saving User Data to LocalStorage:", response.data.user);  // Debugging log
+          localStorage.setItem('user', JSON.stringify(response.data.user));
         }
       } else {
-        const response = await axios.post(backendUrl + '/api/user/login', { email, password })
-        if (response.data.success) {
-          setToken(response.data.token)
-          localStorage.setItem('token', response.data.token)
-        } else {
-          toast.error(response.data.message)
-        }
+        toast.error(response.data.message);
       }
-    } catch (error) {
-      console.log(error)
-      toast.error(error.message)
+    } else {
+      const response = await axios.post(backendUrl + '/api/user/login', { email, password });
+      console.log("Login Response:", response.data);  // Debugging log
+      if (response.data.success) {
+        setToken(response.data.token);
+        localStorage.setItem('token', response.data.token);
+
+        // Save user as well
+        if (response.data.user) {
+          console.log("Saving User Data to LocalStorage:", response.data.user);  // Debugging log
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+      } else {
+        toast.error(response.data.message);
+      }
     }
+  } catch (error) {
+    console.log("Error:", error);  // Debugging log
+    toast.error(error.message);
   }
+};
+
 
   useEffect(() => {
     if (token) {
