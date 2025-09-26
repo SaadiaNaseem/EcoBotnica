@@ -36,8 +36,7 @@
 
 
 
-
-// scokettttsssss
+//socketss
 
 
 
@@ -49,32 +48,34 @@ import "dotenv/config";
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
 
-// Existing routes
+// Routes
 import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRouter.js";
 import orderRouter from "./routes/orderRouter.js";
-
-// Community chat models
-import Message from "./models/message.js";
-import Report from "./models/report.js";
-
-//plant care page related 
 import plantCareRoutes from "./routes/plantCareRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+
+// Models
+import Report from "./models/report.js";
 
 // App Config
 const app = express();
 const port = process.env.PORT || 4000;
-
-// Create HTTP server for socket.io
 const server = http.createServer(app);
 
 // ✅ Socket.IO setup
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH"],
   },
+});
+
+// Attach io to every request (so controllers can use req.io)
+app.use((req, res, next) => {
+  req.io = io;
+  next();
 });
 
 // Connect DB + Cloudinary
@@ -91,18 +92,9 @@ app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/plantcare", plantCareRoutes);
+app.use("/api/messages", messageRoutes);
 
-
-// Community Chat REST API
-app.get("/api/messages", async (req, res) => {
-  try {
-    const messages = await Message.find().sort({ createdAt: 1 });
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch messages" });
-  }
-});
-
+// Report route
 app.post("/api/report", async (req, res) => {
   try {
     const { reportedBy, reportedUser, reason, messageText } = req.body;
@@ -110,42 +102,31 @@ app.post("/api/report", async (req, res) => {
     await report.save();
     res.json({ success: true, report });
   } catch (err) {
+    console.error("❌ Error submitting report:", err.message);
     res.status(500).json({ error: "Failed to submit report" });
   }
 });
 
 // Test endpoint
 app.get("/", (req, res) => {
-  res.send("API WORKING 🚀");
+  res.send("✅ API WORKING 🚀");
 });
 
 // ✅ SOCKET.IO EVENTS
 io.on("connection", (socket) => {
-  console.log("⚡ User connected:", socket.id);
+  console.log(`⚡ User connected: ${socket.id}`);
 
-  // Send message
-  socket.on("sendMessage", async (msgData) => {
-    const newMsg = new Message(msgData);
-    await newMsg.save();
-    io.emit("newMessage", newMsg); // broadcast to all
-  });
-
-  // Handle votes
-  socket.on("voteMessage", async ({ id, type }) => {
-    const msg = await Message.findById(id);
-    if (!msg) return;
-    if (type === "up") msg.upvotes++;
-    else msg.downvotes++;
-    await msg.save();
-    io.emit("updateMessage", msg);
+  // Just rebroadcast events
+  socket.on("sendMessage", (msgData) => {
+    io.emit("newMessage", msgData);
   });
 
   socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
+    console.log(`❌ User disconnected: ${socket.id}`);
   });
 });
 
 // Start server
-server.listen(port, () =>
-  console.log(`✅ Server with Socket.IO running on PORT: ${port}`)
-);
+server.listen(port, () => {
+  console.log(`✅ Server with Socket.IO running on PORT: ${port}`);
+});

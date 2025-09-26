@@ -27,6 +27,9 @@ import AddNewPlantProfile from './pages/AddNewPlantProfile';
 import CommunityChat from './pages/CommunityChat';
 import ChooseRole from './pages/chooseRole';
 import { ShopContext } from './context/ShopContext';
+import AdminDashboard from "./pages/AdminDashboard";
+
+
 
 // ✅ Normal ProtectedRoute
 const ProtectedRoute = ({ children, message }) => {
@@ -74,6 +77,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
+
         <Route
           path='/plantationGuide'
           element={
