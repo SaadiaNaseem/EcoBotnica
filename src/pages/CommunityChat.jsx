@@ -159,7 +159,7 @@ function CommunityChat() {
               msg.user === "You"
                 ? "bg-green-100 self-end text-right ml-auto"
                 : "bg-gray-100 self-start text-left"
-            } max-w-max max-w-[80%]`}
+            }  max-w-[80%]`}
           >
             <p className="text-sm font-semibold text-green-700">{msg.user}</p>
             <p className="text-gray-800 whitespace-pre-wrap break-words">
