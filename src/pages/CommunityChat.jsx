@@ -1,11 +1,9 @@
-// new wla community with implementation of socketss
-
 import React, { useState, useRef, useEffect } from "react";
 import Title from "../compononts/Title";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-// import { getUser } from "../utils/getUserId.js";
-
+import { getUser } from "../utils/getUserId.js";
+import { io } from "socket.io-client";
 
 function CommunityChat() {
   const [joined, setJoined] = useState(false);
@@ -27,24 +25,38 @@ function CommunityChat() {
 
   const chatEndRef = useRef(null);
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
-  // ✅ Check token on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/login"); // redirect if not logged in
+      navigate("/login");
     } else {
       setJoined(true);
       fetchMessages();
+
+      socketRef.current = io("http://localhost:4000");
+
+      socketRef.current.on("newMessage", (newMsg) => {
+        setMessages((prev) => [...prev, newMsg]);
+      });
+
+      socketRef.current.on("updateMessage", (updatedMsg) => {
+        setMessages((prev) =>
+          prev.map((msg) => (msg._id === updatedMsg._id ? updatedMsg : msg))
+        );
+      });
+
+      return () => {
+        socketRef.current.disconnect();
+      };
     }
   }, [navigate]);
 
-  // ✅ Auto-scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ✅ Fetch messages from backend
   const fetchMessages = async () => {
     try {
       const res = await axios.get("http://localhost:4000/api/messages");
@@ -62,58 +74,35 @@ function CommunityChat() {
     }
   };
 
-  // ✅ Send message (to backend)
- const handleSend = async () => {
-  if (!message.trim()) return;
+  const handleSend = async () => {
+    if (!message.trim()) return;
 
-  try {
-    const res = await axios.post("http://localhost:4000/api/messages", {
-      text: message,
-    });
+    const user = getUser();
+    if (!user) return navigate("/login");
 
-    console.log("✅ Response:", res.data);
+    try {
+      await axios.post("http://localhost:4000/api/messages", {
+        text: message,
+        userId: user._id,
+        userName: user.name,
+      });
+      setMessage("");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    setMessages([...messages, { text: message, user: "You" }]);
-    setMessage("");
-  } catch (err) {
-    console.error("❌ Error sending message", err.response?.data || err.message);
-  }
-};
-
-
-
-
-
-//   const handleSend = async () => {
-//   if (message.trim() === "" && !image) return;
-
-//   const token = localStorage.getItem("token");
-//   if (!token) return navigate("/login");
-
-//   const currentUser = getUser(); // 👈 yahan se user nikaal liya
-//   if (!currentUser) return navigate("/login");
-
-//   try {
-//     const newMsg = { 
-//       text: message, 
-//       image, 
-//       user: currentUser.name || "Unknown User"  // 👈 yahan se name use hoga
-//     };
-
-//     await axios.post(
-//       "http://localhost:4000/api/messages",
-//       { text: message, image },
-//       { headers: { Authorization: `Bearer ${token}` } }
-//     );
-
-//     setMessages([...messages, newMsg]);
-//     setMessage("");
-//     setImage(null);
-//   } catch (err) {
-//     console.error("Error sending message", err);
-//   }
-// };
-
+  const handleVote = async (index, type) => {
+    const msg = messages[index];
+    try {
+      await axios.post(
+        `http://localhost:4000/api/messages/${msg._id}/vote`,
+        { type }
+      );
+    } catch (err) {
+      console.error("Failed to vote", err);
+    }
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -124,16 +113,6 @@ function CommunityChat() {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleVote = (index, type) => {
-    const updatedMessages = [...messages];
-    if (type === "up") {
-      updatedMessages[index].upvotes += 1;
-    } else {
-      updatedMessages[index].downvotes += 1;
-    }
-    setMessages(updatedMessages);
   };
 
   const handleReportSubmit = async (index) => {
@@ -165,10 +144,7 @@ function CommunityChat() {
     setCustomReason("");
   };
 
-  // ✅ Remove old join-screen (no need for name input)
-  if (!joined) {
-    return null; // handled by useEffect redirect
-  }
+  if (!joined) return null;
 
   return (
     <div className="flex flex-col h-[70vh] max-w-2xl mx-auto mt-10 bg-white border border-gray-200 rounded-lg shadow-md p-4">

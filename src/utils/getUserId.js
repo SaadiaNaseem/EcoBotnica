@@ -8,4 +8,17 @@ export const getUserId = () => {
   } catch (err) {
     return null;
   }
+
+
+
+};
+
+export const getUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    return JSON.parse(raw); // returns {_id, name, email}
+  } catch (err) {
+    return null;
+  }
 };

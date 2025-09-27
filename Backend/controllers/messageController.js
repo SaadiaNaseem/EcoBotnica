@@ -12,27 +12,64 @@ export const getMessages = async (req, res) => {
 };
 
 // ✅ Post a new message
+// export const postMessage = async (req, res) => {
+//   try {
+//     const { text, image,userName } = req.body;
+//     if (!text) {
+//       return res.status(400).json({ error: "Message text is required" });
+//     }
+
+//    const newMessage = new Message({
+//       user: userName || "Anonymous",
+//       text,
+//       image,
+//     });
+//     await newMessage.save();
+
+//     // Broadcast via socket.io if available
+//     if (req.io) {
+//       req.io.emit("newMessage", newMessage);
+//     }
+
+//     res.json({ success: true, message: newMessage });
+//   } catch (error) {
+//     console.error("❌ Error sending message:", error.message);
+//     res.status(500).json({ error: "Failed to send message" });
+//   }
+// };
+
 export const postMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    console.log("📩 Incoming request body:", req.body);
+
+    const { text, image, userName } = req.body;
     if (!text) {
+      console.log("⚠️ No text provided in request");
       return res.status(400).json({ error: "Message text is required" });
     }
 
-    const user = req.user?.name || "Anonymous"; // fallback if no auth
+    console.log("👤 Extracted userName:", userName);
 
     const newMessage = new Message({
-      user,
+      user: userName || "Anonymous",
       text,
       image,
     });
 
+    console.log("🆕 New message object before save:", newMessage);
+
     await newMessage.save();
+    console.log("✅ Message saved successfully:", newMessage);
 
     // Broadcast via socket.io if available
     if (req.io) {
+      console.log("📡 Emitting socket event: newMessage");
       req.io.emit("newMessage", newMessage);
+    } else {
+      console.log("⚠️ req.io not found, socket not emitting");
     }
+console.log("✅ Message saved, sending response:", newMessage);
+// res.json({ success: true, message: newMessage });
 
     res.json({ success: true, message: newMessage });
   } catch (error) {
@@ -40,6 +77,9 @@ export const postMessage = async (req, res) => {
     res.status(500).json({ error: "Failed to send message" });
   }
 };
+
+
+
 
 // ✅ Upvote/Downvote message
 export const voteMessage = async (req, res) => {
