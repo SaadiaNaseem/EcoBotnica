@@ -1,12 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useContext } from 'react';
 import { Camera, Upload } from "lucide-react";
 import Title from "../compononts/Title";
-
+import { Disease } from '../context/disease';
 const PlantDoctor = () => {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+
+  const { diagnoseDisease, response, loading } = useContext(Disease);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -42,14 +45,18 @@ const PlantDoctor = () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = canvas.toDataURL('image/png');
-    setCapturedPhoto(imageData);
+    canvas.toBlob((blob) => {
+      const imageData = canvas.toDataURL('image/png');
+      setCapturedPhoto(imageData);
+      // Create file from blob for API
+      const file = new File([blob], "captured-plant.png", { type: "image/png" });
+      setImageFile(file);
+    });
     stopCamera();
   };
 
   const uploadCaptured = () => {
     setSelectedImage(capturedPhoto);
-    setCapturedPhoto(null);
     setShowDetails(false);
   };
 
@@ -57,17 +64,66 @@ const PlantDoctor = () => {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(URL.createObjectURL(file));
+      setImageFile(file);
       setShowDetails(false);
     }
   };
 
-  const handleStartScan = () => {
-    if (!selectedImage) {
+  const handleStartScan = async () => {
+    if (!selectedImage || !imageFile) {
       alert("Please upload an image before starting the scan.");
       return;
     }
-    setShowDetails(true);
+
+    try {
+      await diagnoseDisease(imageFile);
+      setShowDetails(true);
+    } catch (error) {
+      console.error("Error scanning plant:", error);
+      alert("Failed to scan plant. Please try again.");
+    }
   };
+
+  // Function to parse the AI response and format it properly
+  // const parseAIResponse = (responseText) => {
+  //   if (!responseText) return null;
+    
+  //   // Split by bullet points and format
+  //   const sections = responseText.split('• **').filter(section => section.trim());
+  //   const result = {};
+    
+  //   sections.forEach(section => {
+  //     const [title, ...contentParts] = section.split('**:');
+  //     if (title && contentParts.length > 0) {
+  //       const content = contentParts.join('**:').trim();
+  //       result[title.trim()] = content;
+  //     }
+  //   });
+    
+  //   return result;
+  // };
+
+
+const parseAIResponse = (responseText) => {
+  if (!responseText) return null;
+
+  // Split by sections based on the bullet points with `• **`
+  const sections = responseText.split('• **').filter(section => section.trim());
+  const result = {};
+
+  sections.forEach(section => {
+    const [title, ...contentParts] = section.split('**:');
+    if (title && contentParts.length > 0) {
+      const content = contentParts.join('**:').trim();
+      result[title.trim()] = content;
+    }
+  });
+
+  return result;
+};
+
+
+  const parsedResponse = parseAIResponse(response);
 
   return (
     <div className='py-12'>
@@ -83,72 +139,112 @@ const PlantDoctor = () => {
           <div className="flex gap-4 flex-wrap">
             <button
               onClick={openCamera}
-              className="flex items-center gap-2 px-5 py-2 rounded-full bg-black text-white text-sm"
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2 rounded-full bg-black text-white text-sm disabled:opacity-50"
             >
               <Camera size={16} /> Take picture of Plant
             </button>
 
-            <label className="flex items-center gap-2 px-5 py-2 rounded-full bg-black text-white text-sm cursor-pointer">
+            <label className="flex items-center gap-2 px-5 py-2 rounded-full bg-black text-white text-sm cursor-pointer disabled:opacity-50">
               <Upload size={16} /> Upload photo from device
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleImageUpload}
+                disabled={loading}
+              />
             </label>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Analyzing plant image...</p>
+            </div>
+          )}
+
           {/* Plant Info (After Scan) */}
-          {showDetails && (
+          {/* {showDetails && !loading && parsedResponse && (
             <div className="text-base space-y-6">
-              <h1 className="text-5xl font-light tracking-wide">Monstera Adansonii</h1>
+              <h1 className="text-5xl font-light tracking-wide">Plant Diagnosis</h1>
 
-              <div className="space-y-2">
-                <div>
-                  <p className="text-black font-semibold">Name:</p>
-                  <p className="text-gray-900">Monstera Adansonii</p>
-                </div>
-
-                <div>
-                  <p className="text-black font-semibold">Identified Disease:</p>
-                  <p className="text-gray-900">Leaf Yellowing or Chlorosis</p>
-                </div>
-
-                <div>
-                  <p className="text-black font-semibold">Severity:</p>
-                  <p className="text-yellow-700">Moderate</p>
-                </div>
-
-                <div>
-                  <p className="text-black font-semibold">Cause:</p>
-                  <ul className="list-disc list-inside text-gray-900 space-y-1">
-                    <li className="pl-[8px]">Chlorosis is often caused by nutrient deficiencies, primarily nitrogen, iron, or magnesium.</li>
-                    <li className="pl-[8px]">It can also occur due to overwatering, poor drainage, or pests like spider mites.</li>
-                    <li className="pl-[8px]">Excessive direct sunlight or improper care can worsen the condition.</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <p className="text-black font-semibold">Symptoms:</p>
-                  <ul className="list-disc list-inside text-gray-900 space-y-1">
-                    <li className="pl-[8px]">Yellowing leaves, especially between the veins</li>
-                    <li className="pl-[8px]">Weak and stunted growth</li>
-                    <li className="pl-[8px]">Leaves losing their vibrant green color</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <p className="text-back font-semibold">Treatments:</p>
-                  <ol className="list-decimal list-inside text-gray-900 space-y-1">
-                    <li className="pl-[8px]">Watering: Allow soil to dry slightly between waterings; ensure proper drainage.</li>
-                    <li className="pl-[8px]">Fertilizer: Use balanced fertilizer (e.g., 20-20-20) and iron supplements if needed.</li>
-                    <li className="pl-[8px]">Pruning: Remove yellow or damaged leaves.</li>
-                    <li className="pl-[8px]">Light: Place in bright, indirect sunlight.</li>
-                    <li className="pl-[8px]">Pests: Use neem oil if pests like spider mites are present.</li>
-                  </ol>
-                </div>
-
-                <div>
-                  <p className="text-black font-semibold">Urgency:</p>
-                  <p className="text-red-600">Moderate. Treat promptly to prevent worsening.</p>
-                </div>
+              <div className="space-y-4">
+                {Object.entries(parsedResponse).map(([key, value]) => (
+                  <div key={key}>
+                    <p className="text-black font-semibold capitalize">{key.replace(/([A-Z])/g, ' $1')}:</p>
+                    {key.toLowerCase().includes('severity') || key.toLowerCase().includes('urgency') ? (
+                      <p className={
+                        value.toLowerCase().includes('severe') || value.toLowerCase().includes('high') 
+                          ? "text-red-600" 
+                          : value.toLowerCase().includes('moderate') 
+                            ? "text-yellow-600" 
+                            : "text-green-600"
+                      }>
+                        {value}
+                      </p>
+                    ) : (
+                      <div className="text-gray-900 whitespace-pre-wrap">
+                        {value.split('\n').map((line, index) => (
+                          <p key={index} className={line.trim().startsWith('-') ? 'pl-4' : ''}>
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
+            </div>
+          )} */}
+
+
+{showDetails && !loading && parsedResponse && (
+  <div className="text-base space-y-6">
+    <h1 className="text-5xl font-light tracking-wide">Plant Diagnosis</h1>
+
+    <div className="space-y-4">
+      {Object.entries(parsedResponse).map(([key, value]) => (
+        <div key={key}>
+          <p className="text-black font-semibold capitalize">{key.replace(/([A-Z])/g, ' $1')}:</p>
+
+          {/* Apply custom styling based on the content */}
+          {key.toLowerCase().includes('severity') || key.toLowerCase().includes('urgency') ? (
+            <p
+              className={
+                value.toLowerCase().includes('severe') || value.toLowerCase().includes('high')
+                  ? "text-red-600"
+                  : value.toLowerCase().includes('moderate')
+                  ? "text-yellow-600"
+                  : "text-green-600"
+              }
+            >
+              {value}
+            </p>
+          ) : (
+            <div className="text-gray-900 whitespace-pre-wrap">
+              {value.split('\n').map((line, index) => (
+                <p key={index} className={line.trim().startsWith('-') ? 'pl-4' : ''}>
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+
+
+
+          {/* Error or No Details Found */}
+          {showDetails && !loading && response && response.includes("no details found") && (
+            <div className="text-center py-8 text-red-600">
+              <p className="text-lg">No disease details found for this plant image.</p>
+              <p className="text-sm text-gray-600 mt-2">Please try with a clearer image or different plant.</p>
             </div>
           )}
         </div>
@@ -204,7 +300,7 @@ const PlantDoctor = () => {
                 <img
                   src="/bird-of-paradise.jpg"
                   alt="Bird of Paradise"
-                  className="w-full h-auto object-contain "
+                  className="w-full h-auto object-contain"
                 />
               )}
             </div>
@@ -213,9 +309,10 @@ const PlantDoctor = () => {
           {/* Start Scan Button */}
           <button
             onClick={handleStartScan}
-            className="px-6 py-2 bg-black text-white rounded-full text-sm tracking-wide hover:bg-black/80 transition"
+            disabled={loading || !selectedImage}
+            className="px-6 py-2 bg-black text-white rounded-full text-sm tracking-wide hover:bg-black/80 transition disabled:opacity-50"
           >
-            Start Scan
+            {loading ? "Scanning..." : "Start Scan"}
           </button>
         </div>
       </div>

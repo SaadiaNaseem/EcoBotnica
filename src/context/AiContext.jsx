@@ -65,7 +65,7 @@ Here is the user input: "${prompt}"
         },
         {
           headers: {
-            Authorization: "Bearer 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",
+            Authorization: "Bearer APIKEY",
             "Content-Type": "application/json",
           },
         }

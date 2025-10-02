@@ -5,6 +5,7 @@ import Title from '../compononts/Title';
 
 const PlantIdentification = () => {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [plantInfo, setPlantInfo] = useState(null); // <-- new state
   const [showDetails, setShowDetails] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
@@ -72,12 +73,41 @@ const PlantIdentification = () => {
     }
   };
 
+  // 🔹 Function to send image to backend API
+  const fetchPlantInfo = async (imageFile) => {
+    const formData = new FormData();
+    formData.append("file", imageFile);
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/predict-plant/", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch");
+
+      const data = await res.json();
+      setPlantInfo(data);  // save backend response
+    } catch (error) {
+      console.error(error);
+      alert("Error detecting plant. Please try again.");
+    }
+  };
+
   const handleStartScan = () => {
     if (!selectedImage) {
       alert('Please upload an image before starting the scan.');
       return;
     }
-    setShowDetails(true);
+
+    // If selectedImage is file path → convert into File for upload
+    fetch(selectedImage)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], "plant.png", { type: "image/png" });
+        fetchPlantInfo(file);
+        setShowDetails(true);
+      });
   };
 
   // Disease Detection Flow
@@ -137,20 +167,12 @@ const PlantIdentification = () => {
           </div>
 
           {/* Plant Info */}
-          {showDetails && (
+          {showDetails && plantInfo && (
             <div className="text-base space-y-6">
-              <h1 className="text-5xl font-light tracking-wide">Bird of Paradise</h1>
+              <h1 className="text-4xl font-light tracking-wide">{plantInfo.plant_name}</h1>
               <div className="space-y-2">
-                <p><strong>Name:</strong> Bird of Paradise</p>
-                <p><strong>Scientific Name:</strong> Strelitzia reginae</p>
-                <p><strong>Indoor or Outdoor Plant:</strong> Both</p>
-                <p><strong>Optimal Growing Seasons:</strong> Spring and Summer</p>
-                <p><strong>Toxicity Status:</strong> Mildly toxic to pets (cats and dogs)</p>
-                <p><strong>Environment:</strong></p>
-                <ul className="list-disc pl-5">
-                  <li><strong>Indoor:</strong> Bright, indirect sunlight, allow soil to dry between waterings</li>
-                  <li><strong>Outdoor:</strong> Full sun, well-drained soil, tropical or subtropical climates</li>
-                </ul>
+                <p><strong>Name:</strong> {plantInfo.plant_name}</p>
+                <p><strong>Confidence:</strong> {(plantInfo.confidence * 100).toFixed(2)}%</p>
               </div>
 
               <button
