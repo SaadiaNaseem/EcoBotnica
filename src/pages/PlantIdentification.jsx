@@ -73,41 +73,12 @@ const PlantIdentification = () => {
     }
   };
 
-  // 🔹 Function to send image to backend API
-  const fetchPlantInfo = async (imageFile) => {
-    const formData = new FormData();
-    formData.append("file", imageFile);
-
-    try {
-      const res = await fetch("http://127.0.0.1:8000/predict-plant/", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const data = await res.json();
-      setPlantInfo(data);  // save backend response
-    } catch (error) {
-      console.error(error);
-      alert("Error detecting plant. Please try again.");
-    }
-  };
-
   const handleStartScan = () => {
     if (!selectedImage) {
       alert('Please upload an image before starting the scan.');
       return;
     }
-
-    // If selectedImage is file path → convert into File for upload
-    fetch(selectedImage)
-      .then((res) => res.blob())
-      .then((blob) => {
-        const file = new File([blob], "plant.png", { type: "image/png" });
-        fetchPlantInfo(file);
-        setShowDetails(true);
-      });
+    setShowDetails(true);
   };
 
   // Disease Detection Flow

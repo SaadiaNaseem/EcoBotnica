@@ -31,7 +31,7 @@ Here is the plantation guide:
         },
         {
           headers: {
-            Authorization: "Bearer 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",
+            Authorization: "key here",
             "Content-Type": "application/json",
           },
         }

@@ -1,3 +1,4 @@
+// server.js (replace the route imports lines at top or use this whole file)
 import express from "express";
 import cors from "cors";
 import http from "http";
@@ -35,6 +36,45 @@ const io = new Server(server, {
 app.use((req, res, next) => {
   req.io = io;
   next();
+});
+
+// Existing routes - make sure names match actual filenames
+import userRouter from "./routes/userRoutes.js";        // <-- note 'userRoutes.js'
+import productRouter from "./routes/productRoute.js";
+import cartRouter from "./routes/cartRouter.js";
+import orderRouter from "./routes/orderRouter.js";
+
+// Community chat models
+import Message from "./models/message.js";
+import Report from "./models/report.js";
+
+// plant care page related 
+import plantCareRoutes from "./routes/plantCareRoutes.js";
+
+// User Profile related 
+import profileRouter from "./routes/profileRoutes.js";   // <-- note 'profileRoute.js'
+
+// notification related
+import notificationRoutes from "./routes/notificationRoutes.js";
+import "./utils/notificationScheduler.js";
+
+//weather based notification related 
+import weatherNotificationRoutes from "./routes/weatherNotificationRoutes.js";
+
+
+// App Config
+const app = express();
+const port = process.env.PORT || 4000;
+
+// Create HTTP server for socket.io
+const server = http.createServer(app);
+
+// Socket.IO setup
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
 // Connect DB + Cloudinary
@@ -87,6 +127,29 @@ app.post("/api/report", async (req, res) => {
 
   } catch (err) {
     console.error("❌ Error submitting report:", err.message);
+app.use("/api/profile", profileRouter);
+// ✅ New notifications route
+app.use("/api/notifications", notificationRoutes);
+// weather based notification routes
+app.use("/api/weather-notifications", weatherNotificationRoutes);
+
+// Community Chat REST API
+app.get("/api/messages", async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ createdAt: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
+app.post("/api/report", async (req, res) => {
+  try {
+    const { reportedBy, reportedUser, reason, messageText } = req.body;
+    const report = new Report({ reportedBy, reportedUser, reason, messageText });
+    await report.save();
+    res.json({ success: true, report });
+  } catch (err) {
     res.status(500).json({ error: "Failed to submit report" });
   }
 });
@@ -133,6 +196,32 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`❌ User disconnected: ${socket.id}`);
+// Test endpoint
+app.get("/", (req, res) => {
+  res.send("API WORKING 🚀");
+});
+
+// SOCKET.IO EVENTS (unchanged)
+io.on("connection", (socket) => {
+  console.log("⚡ User connected:", socket.id);
+
+  socket.on("sendMessage", async (msgData) => {
+    const newMsg = new Message(msgData);
+    await newMsg.save();
+    io.emit("newMessage", newMsg);
+  });
+
+  socket.on("voteMessage", async ({ id, type }) => {
+    const msg = await Message.findById(id);
+    if (!msg) return;
+    if (type === "up") msg.upvotes++;
+    else msg.downvotes++;
+    await msg.save();
+    io.emit("updateMessage", msg);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected:", socket.id);
   });
 });
 
@@ -147,3 +236,6 @@ server.listen(port, () => {
   console.log("   GET    /api/reports-test (for testing)");
   console.log("   GET    /api/all-reports (for debugging)");
 });
+server.listen(port, () =>
+  console.log(`✅ Server with Socket.IO running on PORT: ${port}`)
+);

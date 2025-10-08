@@ -1,25 +1,19 @@
+// src/components/complaints/FilterDropdown.jsx
 import React from "react";
 
 const FilterDropdown = ({ value, onChange }) => {
-  const filters = [
-    "All",
-    "Abuse",
-    "Spam", 
-    "Misinfo",
-    "Other"
-  ];
-
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+      className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
+      aria-label="Filter complaints"
     >
-      {filters.map(filter => (
-        <option key={filter} value={filter}>
-          {filter}
-        </option>
-      ))}
+      <option value="All">All</option>
+      <option value="Spam">Spam</option>
+      <option value="Flagged Content">Flagged Content</option>
+      <option value="Policy Violation">Policy Violation</option>
+      <option value="Other">Other</option>
     </select>
   );
 };

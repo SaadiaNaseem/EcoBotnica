@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
+import { FiBell } from "react-icons/fi";
 
 const Navbar = () => {
   const [isEcom, setIsEcom] = useState(false);
@@ -12,6 +13,7 @@ const Navbar = () => {
     setVisible(false);
   };
   const { setShowSearch, getCartCount, navigate, token, setToken, setCartItems } = useContext(ShopContext);
+   const [notificationCount] = useState(3);// temp for now make notification count function and replace 
 
 
   const logout = () => {
@@ -90,7 +92,6 @@ const Navbar = () => {
 
       {/* Icons Section */}
       <div className="flex items-center gap-6">
-        <img onClick={() => setShowSearch(true)} src={assets.search} className="w-5 h-5 cursor-pointer" alt="Search" />
         <div className='group relative'>
 
           <img onClick={() => token ? null : navigate('/login')} src={assets.profile_icon} className='w-5 h-5 cursor-pointer' alt="" />
@@ -123,6 +124,13 @@ const Navbar = () => {
           <img src={assets.cart_icon} className="w-5 min-w-5" alt="Cart" />
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">
             {getCartCount()}
+          </p>
+        </Link>
+        {/* 🔔 Notification Bell Icon (NEW) */}
+        <Link to="/notification" className="relative">
+          <FiBell className="w-5 h-5 cursor-pointer text-gray-800" />
+          <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-red-600 text-white aspect-square rounded-full text-[8px]">
+            {notificationCount}
           </p>
         </Link>
         <img onClick={() => setVisible(true)} src={assets.menu_icon} className="w-5 h-5 cursor-pointer sm:hidden" alt="Menu" />

@@ -7,53 +7,67 @@ export const AiContext = createContext();
 export const AiProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
+  const [activePrompt, setActivePrompt] = useState("");
 
+  // 🌿 Main Function to Generate Response
   const fetchPlantationGuide = async (prompt) => {
+    if (!prompt.trim()) return;
+
+    // 🧹 Clear previous response before fetching new one
+    setResponse("");
+    setActivePrompt(prompt);
     setLoading(true);
+
     const fullPrompt = `
-You are a plant care assistant. The user will provide a single plant name.
+You are a plant care assistant. The user will provide either:
 
-If the input is a valid plant name, generate a step-by-step plantation guide including:
-🌿 Plant Name: [Insert Plant Name Here]
-• Generate a **step-by-step plantation guide** using easy, clear bullet points** with a **little bit of detail** for each step below.
+1️⃣ A plant name (e.g., “Rose”, “Tulsi”, “Tomato”)
+2️⃣ A planting-related query (e.g., “How to grow herbs in pots”, “How to plant roses in cold weather”).
 
-Make sure each step includes **2 to 4 beginner-friendly bullet points**.
+🌿 Your Response Rules
+first check is the question or query related to plants , if yes then go for response else simply say " please ask plant related question , 
+like i want to grow this how to plant else answering other questions are not in my domain , Thank you : Happy Gardning 🌿"
 
-• Step 1: Selecting the Right Location 
-  - Mention sunlight requirements (e.g., full sun, partial shade).  
-  - Talk about whether the plant is suitable for indoor or outdoor.  
-  - Ensure the area is protected from strong winds and flooding.  
+If input is a plant name, generate a beginner-friendly, step-by-step plantation guide.
+If input is a planting-related query, create a personalized step-by-step guide according to that context.
 
-• Step 2: Preparing the Soil 
-  - Explain the ideal soil type (e.g., well-draining, loamy).  
-  - Recommend adding compost or organic matter.  
-  - Mention if the plant prefers slightly acidic, neutral, or alkaline soil.  
+Each guide must include 6 clearly formatted sections, using bold headings and short, clear bullet points for easy reading.
 
-• Step 3: Planting the Seeds or Seedlings 
-  - Describe how deep and how far apart to plant seeds or seedlings.  
-  - Suggest best season or temperature for planting.  
-  - Remind to gently press soil after planting to remove air pockets.  
+🌼 Response Format
 
-• Step 4: Watering 
-  - State how often to water and how much is needed.  
-  - Explain whether the soil should stay moist or dry out between watering.  
-  - Mention to avoid overwatering or waterlogging.  
+🌿 Plant/Topic: [Insert plant name or topic]
 
-• Step 5: Initial Care After Planting
-  - Recommend temporary shade for delicate plants.  
-  - Suggest monitoring for pests or leaf wilting.  
-  - Mention keeping the soil moist and avoiding disturbance.  
+🌳 Step 1: Selecting the Right Location
+• Choose a sunny spot with at least 5–6 hours of light.
+• Avoid areas with strong winds or waterlogging.
 
-• Step 6: Ongoing Maintenance 
-  - Advise on regular watering, pruning, or fertilizing needs.  
-  - Suggest how to deal with common pests or diseases.  
-  - Encourage removing weeds and trimming dead parts.  
-  - Mention if seasonal care or repotting is needed.
+🌱 Step 2: Preparing the Soil
+• Loosen the soil and remove weeds or stones.
+• Mix compost or organic fertilizer to enrich the soil.
+• Slightly wet the soil before planting.
 
-BUT — if the input is not a valid plant name or if it seems like a general question or sentence, then reply with:
-❌ You can only search by plant name. Please enter a valid plant name.
+🌸 Step 3: Planting the Seeds or Seedlings
+• Dig a small hole about 2–3 inches deep (adjust for plant type).
+• Place the seed or seedling gently inside.
+• Cover lightly with soil and pat it down gently.
 
-Here is the user input: "${prompt}"
+💧 Step 4: Watering
+• Water the area evenly right after planting.
+• Keep soil moist but not soggy.
+• Avoid watering leaves directly.
+
+🌞 Step 5: Initial Care After Planting
+• Provide partial shade for 2–3 days if the sun is too strong.
+• Watch for pests or leaf spots in early growth.
+
+🌻 Step 6: Ongoing Maintenance
+• Water regularly (every 2–3 days or when soil feels dry).
+• Add compost every 3–4 weeks.
+• Trim dead or dry leaves to encourage healthy growth.
+• Support tall plants with small stakes if needed.
+
+
+Here is the user input: "${prompt}"
 `;
 
     try {
@@ -65,20 +79,32 @@ Here is the user input: "${prompt}"
         },
         {
           headers: {
-            Authorization: "Bearer API_KEY",
+            Authorization: "key here", // 🔑 your actual API key here
             "Content-Type": "application/json",
           },
         }
       );
+
       setResponse(res.data.choices[0].message.content);
     } catch (err) {
+      console.error(err);
       setResponse("❌ Error fetching data. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <AiContext.Provider value={{ fetchPlantationGuide, response, loading }}>
+    <AiContext.Provider
+      value={{
+        fetchPlantationGuide,
+        response,
+        setResponse,
+        loading,
+        activePrompt,
+        setActivePrompt,
+      }}
+    >
       {children}
     </AiContext.Provider>
   );
