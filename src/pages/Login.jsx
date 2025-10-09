@@ -81,16 +81,18 @@ const Login = () => {
         }
       }
     } catch (error) {
-      console.log("Error:", error);  // Debugging log
-      toast.error(error.message);
+      console.error("Error:", error);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
   useEffect(() => {
-    if (token && currentState !== 'Admin') {
-      navigate('/Ecom')
+    if (token) {
+      navigate('/Ecom');
     }
-  }, [token, navigate, currentState])
+  }, [token, navigate]);
 
   return (
     <form
@@ -102,20 +104,16 @@ const Login = () => {
         <hr className='border-none h-[1.5px] w-8 bg-gray-800' />
       </div>
 
-      {/* 👇 Dynamic message */}
       {msg && <p className="text-red-500 text-sm">{msg}</p>}
 
-      {/* Show Name input only in Sign Up */}
-      {currentState === 'Sign up' && (
+      {currentState === 'Login' ? '' :
         <input
           onChange={(e) => setName(e.target.value)}
           type="text"
           className='w-full px-3 py-2 border border-gray-800'
           placeholder='Name'
           required
-        />
-      )}
-
+        />}
       <input
         onChange={(e) => setEmail(e.target.value)}
         type="email"
@@ -132,26 +130,21 @@ const Login = () => {
       />
 
       <div className='w-full flex justify-between text-sm mt-[-8px]'>
-        <p onClick={() => navigate('/forgot-password')} className='cursor-pointer'>Forgot password?</p>
-        {currentState === 'Login' && (
-          <p onClick={() => setCurrentState('Sign up')} className='cursor-pointer'>Create account</p>
-        )}
-        {currentState === 'Sign up' && (
-          <p onClick={() => setCurrentState('Login')} className='cursor-pointer'>Login</p>
-        )}
-        {currentState !== 'Admin' && (
-          <p onClick={() => setCurrentState('Admin')} className='cursor-pointer'>Login as Admin</p>
-        )}
+        <p className='cursor-pointer'>Forgot password?</p>
+        {currentState === 'Login'
+          ? <p onClick={() => setCurrentState('Sign up')} className='cursor-pointer'>Create account</p>
+          : <p onClick={() => setCurrentState('Login')} className='cursor-pointer'>Login</p>
+        }
       </div>
 
       <button
         type='submit'
         className='bg-black text-white font-light px-8 py-2 mt-4 rounded-[20px]'
       >
-        {currentState === 'Login' ? 'Sign in' : currentState === 'Sign up' ? 'Sign up' : 'Admin Sign in'}
+        {currentState === 'Login' ? 'Sign in' : 'Sign up'}
       </button>
     </form>
   )
 }
 
-export default Login
+export default Login;

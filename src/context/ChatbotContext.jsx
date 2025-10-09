@@ -19,7 +19,7 @@ export const ChatbotProvider = ({ children }) => {
     setLoading(true);
 
     try {
-      const apiKey = "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"; // Just the key, no 'Bearer'
+      const apiKey = "key here"; // Just the key, no 'Bearer'
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
