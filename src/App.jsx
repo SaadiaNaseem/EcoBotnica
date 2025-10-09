@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-
-// Pages
 import Collection from './pages/Collection';
 import Product from './pages/Product';
 import Cart from './pages/Cart';
@@ -9,6 +7,7 @@ import Login from './pages/Login';
 import AboutUs from './pages/AboutUs';
 import PlaceOrder from './pages/PlaceOrder';
 import Orders from './pages/Orders';
+import Navbar from './compononts/Navbar';
 import Contacts from './pages/Contacts';
 import PlantIdentification from './pages/PlantIdentification';
 import PlantDoctor from './pages/PlantDoctor';
@@ -16,34 +15,23 @@ import PlantCare from './pages/PlantCare';
 import PlantationGuide from './pages/PlantationGuide';
 import Ecom from './pages/Ecom';
 import CompanionPlanting from './pages/CompanionPlanting';
+import Footer from './compononts/Footer';
+import Searchbar from './compononts/Searchbar';
+import { AiProvider } from './context/AiContext';
 import ProfilePage from "./pages/ProfilePage";
+import { ToastContainer } from 'react-toastify';
 import VerifyPage from './pages/VerifyPage';
 import UserDashboard from './pages/userDashboard';
 import PlantProfile from './pages/PlantProfile';
 import AddNewPlantProfile from './pages/AddNewPlantProfile';
 import CommunityChat from './pages/CommunityChat';
 import ChooseRole from './pages/chooseRole';
-import NotificationsPage from "./pages/NotificationsPage";
-import VisualAidPage from './pages/VisualAidPage';
+import { ShopContext } from './context/ShopContext';
 import AdminDashboard from "./pages/AdminDashboard";
+import { DiseaseProvider } from './context/disease';
 import CommunityComplaints from './pages/CommunityComplaints';
 import ForgotPassword from './compononts/ForgotPassword';
 
-// Components
-import Navbar from './compononts/Navbar';
-import Footer from './compononts/Footer';
-import Searchbar from './compononts/Searchbar';
-import { ToastContainer } from 'react-toastify';
-
-// Contexts / Providers
-import { ShopContext } from './context/ShopContext';
-import { AiProvider } from './context/AiContext';
-import { WeatherProvider } from "./context/WeatherContext";
-import { ChatbotProvider } from "./context/ChatbotContext";
-import { VisualAidProvider } from "./context/VisualAidContext";
-import { MistakeProvider } from "./context/MistakeContext";
-import { NotificationProvider } from "./context/NotificationContext";
-import { DiseaseProvider } from './context/disease';
 
 // ✅ Normal ProtectedRoute
 const ProtectedRoute = ({ children, message }) => {
@@ -52,7 +40,7 @@ const ProtectedRoute = ({ children, message }) => {
 
   if (!token) {
     return <Navigate to="/login" state={{ from: location, msg: message }} replace />;
-  }
+  }+3
   return children;
 };
 
@@ -61,6 +49,7 @@ const ProtectedEcomRoute = ({ children }) => {
   const { token } = useContext(ShopContext);
 
   if (!token) {
+    // agar login nahi hai to ChooseRole pe bhejo
     return <ChooseRole />;
   }
   return children;
@@ -82,58 +71,22 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path='/plantCare'
           element={
             <ProtectedRoute message="Please login to access Plant Care Assistant">
-              <ChatbotProvider>
-                <WeatherProvider>
-                  <NotificationProvider>
-                    <PlantCare />
-                  </NotificationProvider>
-                </WeatherProvider>
-              </ChatbotProvider>
+              <PlantCare />
             </ProtectedRoute>
           }
         />
-
-        <Route
-          path='/notification'
-          element={
-            <ProtectedRoute message="Please login to access notifications">
-              <NotificationProvider>
-                <NotificationsPage />
-              </NotificationProvider>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
 
         <Route
           path='/plantationGuide'
           element={
             <ProtectedRoute message="Please login to access Plantation Guide">
               <AiProvider>
-                <VisualAidProvider>
-                  <MistakeProvider>
-                    <PlantationGuide />
-                  </MistakeProvider>
-                </VisualAidProvider>
-              </AiProvider>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/visual-aid"
-          element={
-            <ProtectedRoute message="Please login to access Visual Aids">
-              <AiProvider>
-                <VisualAidProvider>
-                  <MistakeProvider>
-                    <VisualAidPage />
-                  </MistakeProvider>
-                </VisualAidProvider>
+                <PlantationGuide />
               </AiProvider>
             </ProtectedRoute>
           }
@@ -151,8 +104,9 @@ const App = () => {
         />
 
         {/* ✅ Public Routes */}
-        <Route path="/communityComplaints" element={<CommunityComplaints />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/communityComplaints" element={<CommunityComplaints />} />
+<Route path="/forgot-password" element={<ForgotPassword />} />
+
         <Route path='/PlantProfile' element={<PlantProfile />} />
         <Route path='/addnewplantprofile' element={<AddNewPlantProfile />} />
         <Route path='/collection' element={<Collection />} />
@@ -164,9 +118,13 @@ const App = () => {
         <Route path='/placeOrder' element={<PlaceOrder />} />
         <Route path='/orders' element={<Orders />} />
         <Route path='/' element={<PlantIdentification />} />
+
+
+
+
         <Route path='/companionPlanting' element={<CompanionPlanting />} />
 
-        {/* ✅ Ecom Protected Route */}
+        {/* ✅ Ecom Special Protected Route */}
         <Route
           path='/Ecom'
           element={
@@ -176,10 +134,6 @@ const App = () => {
           }
         />
 
-        {/* ✅ Admin Route */}
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
-
-        {/* ✅ Misc Routes */}
         <Route path='/profilePage' element={<ProfilePage />} />
         <Route path='/verify' element={<VerifyPage />} />
         <Route path='/CommunityChat' element={<CommunityChat />} />

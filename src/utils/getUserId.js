@@ -9,6 +9,8 @@ export const getUserId = () => {
     return null;
   }
 
+
+
 };
 
 export const getUser = () => {

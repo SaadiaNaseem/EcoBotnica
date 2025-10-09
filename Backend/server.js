@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import http from "http";
@@ -7,34 +6,27 @@ import "dotenv/config";
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
 
-// Routes - consolidated imports
+// Routes
 import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRouter.js";
 import orderRouter from "./routes/orderRouter.js";
 import plantCareRoutes from "./routes/plantCareRoutes.js";
-import profileRouter from "./routes/profileRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
-import weatherNotificationRoutes from "./routes/weatherNotificationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
-import reportRoutes from './routes/reports.js';
+import reportRoutes from './routes/reports.js'; // Reports routes
 
 // Models
-import Message from "./models/message.js";
 import Report from "./models/report.js";
-
-// Import notification scheduler
-import "./utils/notificationScheduler.js";
 
 // App Config
 const app = express();
 const port = process.env.PORT || 4000;
 const server = http.createServer(app);
 
-// Socket.IO setup
+// ✅ Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "DELETE"],
   },
 });
@@ -53,7 +45,7 @@ connectCloudinary();
 app.use(express.json());
 app.use(cors());
 
-// Debug middleware to log all requests
+// ✅ Debug middleware to log all requests
 app.use((req, res, next) => {
   console.log(`📨 ${req.method} ${req.originalUrl}`);
   next();
@@ -65,32 +57,19 @@ app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/plantcare", plantCareRoutes);
-app.use("/api/profile", profileRouter);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/weather-notifications", weatherNotificationRoutes);
 app.use("/api/messages", messageRoutes);
-app.use('/api/reports', reportRoutes);
+app.use('/api/reports', reportRoutes); // Reports API
 
-// Community Chat REST API - Keep both for compatibility
-app.get("/api/messages", async (req, res) => {
-  try {
-    const messages = await Message.find().sort({ createdAt: 1 });
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch messages" });
-  }
-});
-
-// REPORT ROUTE - WORKING VERSION (keep for compatibility)
+// ✅ REPORT ROUTE - WORKING VERSION
 app.post("/api/report", async (req, res) => {
   try {
-    const { reportedUser, reason, messageText, reportedBy } = req.body;
+    const { reportedUser, reason, messageText } = req.body;
     
     console.log("📩 New report received:", { reportedUser, reason, messageText });
 
     // Create and save report
     const report = new Report({ 
-      reportedBy: reportedBy || "User", // Use provided value or default
+      reportedBy: "User", // You can change this to get from token if needed
       reportedUser, 
       reason, 
       messageText 
@@ -112,7 +91,7 @@ app.post("/api/report", async (req, res) => {
   }
 });
 
-// Get all reports (for debugging)
+// ✅ Get all reports (for debugging)
 app.get("/api/all-reports", async (req, res) => {
   try {
     const reports = await Report.find().sort({ createdAt: -1 });
@@ -126,7 +105,7 @@ app.get("/api/all-reports", async (req, res) => {
   }
 });
 
-// Test endpoint for reports
+// ✅ Test endpoint for reports
 app.get("/api/reports-test", (req, res) => {
   res.json({ 
     message: "Reports API is working! ✅",
@@ -144,31 +123,12 @@ app.get("/", (req, res) => {
   res.send("✅ API WORKING 🚀");
 });
 
-// SOCKET.IO EVENTS - Consolidated
+// ✅ SOCKET.IO EVENTS
 io.on("connection", (socket) => {
   console.log(`⚡ User connected: ${socket.id}`);
 
-  socket.on("sendMessage", async (msgData) => {
-    try {
-      const newMsg = new Message(msgData);
-      await newMsg.save();
-      io.emit("newMessage", newMsg);
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  });
-
-  socket.on("voteMessage", async ({ id, type }) => {
-    try {
-      const msg = await Message.findById(id);
-      if (!msg) return;
-      if (type === "up") msg.upvotes++;
-      else msg.downvotes++;
-      await msg.save();
-      io.emit("updateMessage", msg);
-    } catch (error) {
-      console.error("Error voting message:", error);
-    }
+  socket.on("sendMessage", (msgData) => {
+    io.emit("newMessage", msgData);
   });
 
   socket.on("disconnect", () => {
@@ -179,17 +139,11 @@ io.on("connection", (socket) => {
 // Start server
 server.listen(port, () => {
   console.log(`✅ Server with Socket.IO running on PORT: ${port}`);
-  console.log("🟢 Available Routes:");
-  console.log("   USER:           /api/user");
-  console.log("   PRODUCT:        /api/product");
-  console.log("   CART:           /api/cart");
-  console.log("   ORDER:          /api/order");
-  console.log("   PLANT CARE:     /api/plantcare");
-  console.log("   PROFILE:        /api/profile");
-  console.log("   NOTIFICATIONS:  /api/notifications");
-  console.log("   WEATHER:        /api/weather-notifications");
-  console.log("   MESSAGES:       /api/messages");
-  console.log("   REPORTS:        /api/reports");
-  console.log("   TEST:           /api/reports-test");
-  console.log("   DEBUG:          /api/all-reports");
+  console.log("🟢 Available Report Routes:");
+  console.log("   GET    /api/reports");
+  console.log("   DELETE /api/reports/resolve-message/:id");
+  console.log("   DELETE /api/reports/resolve-user/:id"); 
+  console.log("   DELETE /api/reports/:id");
+  console.log("   GET    /api/reports-test (for testing)");
+  console.log("   GET    /api/all-reports (for debugging)");
 });

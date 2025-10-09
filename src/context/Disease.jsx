@@ -74,7 +74,7 @@ Here is the user input: "${diseaseName}"`;
         },
         {
           headers: {
-            Authorization: "Bearer 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", // You need to add your actual API key
+            Authorization: "Bearer API_KEY", // You need to add your actual API key
             "Content-Type": "application/json",
           },
         }

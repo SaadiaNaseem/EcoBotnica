@@ -1,6 +1,7 @@
+// frontend/context/WeatherContext.jsx
 import React, { createContext, useState } from "react";
-import axios from "../api/axios"; // ✅ use configured backend axios
-import axiosExternal from "axios"; // for OpenRouter external call
+import axios from "../api/axios"; // backend axios instance
+import axiosExternal from "axios"; // external API calls
 
 export const WeatherContext = createContext();
 
@@ -8,77 +9,85 @@ export const WeatherProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [weeklyWeather, setWeeklyWeather] = useState([]);
 
+  const OPENWEATHER_API_KEY = "c9623f76d598c02467c11c17924e0575";
+
   const fetchWeeklyWeather = async (location) => {
     if (!location) return;
 
     setLoading(true);
     const todayStr = new Date().toDateString();
-    const lastNotificationDate = localStorage.getItem("lastWeatherNotificationDate");
-    const alreadySentToday = lastNotificationDate === todayStr;
 
     console.log("[WeatherContext] Fetching weather for:", location);
 
-    const prompt = `
-You are a weather assistant AI. Today is ${todayStr}.
-Provide a 7-day weather forecast for ${location}, Pakistan, starting from today.
-Return only JSON array of objects with {date, weather, alert}.
-`;
-
     try {
-      // ✅ Use axiosExternal for AI request
-      const res = await axiosExternal.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: prompt }],
-        },
-        {
-          headers: {
-            Authorization:"Bearer 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", // ✅ must be valid key
-            "Content-Type": "application/json",
-          },
-        }
+      // 🌍 Step 1: Get coordinates for city
+      const geoRes = await axiosExternal.get(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${location},PK&limit=1&appid=${OPENWEATHER_API_KEY}`
       );
 
-      const aiRaw = res.data?.choices?.[0]?.message?.content;
-      console.log("[WeatherContext] AI raw content:", aiRaw);
-
-      const cleaned = aiRaw?.trim()?.replace(/^\n+|\n+$/g, "");
-      let parsedData = [];
-      try {
-        parsedData = JSON.parse(cleaned);
-      } catch (err) {
-        console.error("[WeatherContext] JSON parse error:", err, aiRaw);
+      if (!geoRes.data || geoRes.data.length === 0) {
+        console.warn("[WeatherContext] ⚠️ Invalid location or no coordinates found");
+        setWeeklyWeather([]);
+        setLoading(false);
+        return;
       }
 
-      if (!Array.isArray(parsedData)) parsedData = [];
+      const { lat, lon } = geoRes.data[0];
+      console.log("[WeatherContext] Coordinates:", lat, lon);
+
+      // 🌦️ Step 2: Get 5-day / 3-hour forecast
+      const forecastRes = await axiosExternal.get(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${OPENWEATHER_API_KEY}`
+      );
+
+      const list = forecastRes.data?.list || [];
+      const dailyMap = {};
+
+      // Group one weather entry per day
+      list.forEach((entry) => {
+        const date = new Date(entry.dt * 1000).toDateString();
+        if (!dailyMap[date]) {
+          const weather = entry.weather[0]?.description || "No description";
+          const temp = `${entry.main.temp}°C`;
+          let alert = "Normal";
+
+          if (entry.weather[0]?.main === "Rain") alert = "Rain expected – carry umbrella!";
+          if (entry.main.temp > 35) alert = "Hot day – stay hydrated!";
+          if (entry.main.temp < 10) alert = "Cold day – wear warm clothes!";
+
+          dailyMap[date] = { date, weather: `${weather}, ${temp}`, alert };
+        }
+      });
+
+      const parsedData = Object.values(dailyMap).slice(0, 7);
       setWeeklyWeather(parsedData);
+
       console.log("[WeatherContext] Parsed weather data:", parsedData);
 
-      // ✅ Send today's weather to backend
-      if (parsedData.length && !alreadySentToday) {
-        const today = new Date();
-        const todayData = parsedData.find((day) => {
-          const d = new Date(day.date);
-          return (
-            d.getFullYear() === today.getFullYear() &&
-            d.getMonth() === today.getMonth() &&
-            d.getDate() === today.getDate()
-          );
-        });
+      // 🌤️ Step 3: Find today’s weather data
+      const today = new Date().toDateString();
+      const todayData = parsedData.find((d) => d.date === today);
 
-        if (todayData) {
-          console.log("[WeatherContext] Sending today's weather to backend:", todayData);
-          await axios.post("/weather-notifications/send", { todayWeather: todayData });
-          localStorage.setItem("lastWeatherNotificationDate", todayStr);
-          console.log("[WeatherContext] ✅ Weather notification sent to backend");
-        } else {
-          console.log("[WeatherContext] ⚠ No matching todayData found");
+      console.log("[DEBUG] Today:", today);
+      console.log("[DEBUG] Found todayData:", todayData);
+
+      // ✅ Step 4: Send today’s weather to backend
+      if (todayData) {
+        console.log("[WeatherContext] Sending today's weather to backend:", todayData);
+
+        try {
+          const res = await axios.post("/weather-notifications/send", { todayWeather: todayData });
+          console.log("[WeatherContext] ✅ Weather notification sent:", res.data);
+        } catch (err) {
+          console.error("[WeatherContext] ❌ Error sending to backend:", err);
         }
+      } else {
+        console.log("[WeatherContext] ⚠️ No matching today weather data found.");
       }
     } catch (err) {
-      console.error("[WeatherContext] Error fetching weekly weather:", err);
+      console.error("[WeatherContext] ❌ Error fetching weekly weather:", err);
     }
+
     setLoading(false);
   };
 

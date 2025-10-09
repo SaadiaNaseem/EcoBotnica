@@ -13,7 +13,7 @@ export const sendWeatherNotifications = async (req, res) => {
       return res.status(400).json({ error: "No todayWeather data provided" });
     }
 
-    const notificationObj = generateTodayWeatherNotification([todayWeather]);
+    const notificationObj = generateTodayWeatherNotification(todayWeather);
     if (!notificationObj) {
       console.log("[Backend] ℹ️ No weather alert generated for today");
       return res.json({ message: "No weather alert generated for today" });

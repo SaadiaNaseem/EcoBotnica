@@ -1,31 +1,75 @@
-export const generateTodayWeatherNotification = (weeklyWeather) => {
-  const today = new Date();
-  const todayData = weeklyWeather.find((day) => {
-    const d = new Date(day.date);
-    return (
-      d.getFullYear() === today.getFullYear() &&
-      d.getMonth() === today.getMonth() &&
-      d.getDate() === today.getDate()
-    );
-  });
+// utils/weatherNotificationGenerator.js
 
-  if (!todayData) return null;
+export function generateTodayWeatherNotification(todayData) {
+  if (!todayData || !todayData.weather) {
+    return { message: "⚠️ No valid weather data found." };
+  }
 
-  const weather = todayData.weather.toLowerCase();
-  const date = new Date(todayData.date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const weatherText = todayData.weather.toLowerCase().trim();
+  console.log("[Utils] Today's weather:", weatherText);
 
-  console.log("[Utils] Today's weather:", weather);
+  // 🌡️ Extract numeric temperature
+  const tempMatch = weatherText.match(/(-?\d+(\.\d+)?)\s?°c/);
+  const temperature = tempMatch ? parseFloat(tempMatch[1]) : null;
 
-  if (weather.includes("thunderstorm")) return { title: "Weather Alert", content: `⚡ Thunderstorm today (${date}). Move sensitive plants indoors.` };
-  if (weather.includes("rain")) return { title: "Weather Alert", content: `🌧️ Rain today (${date}). Outdoor plants do not need watering.` };
-  if (weather.includes("sunny")) return { title: "Weather Alert", content: `🌞 Sunny day today (${date}). Water sensitive plants twice.` };
-  if (weather.includes("cloudy")) return { title: "Weather Alert", content: `☁️ Cloudy today (${date}). Ideal for pruning/fertilizing.` };
-  if (weather.includes("fog") || weather.includes("mist")) return { title: "Weather Alert", content: `🌫️ Foggy today (${date}). Avoid watering to prevent fungus.` };
-  if (weather.includes("snow")) return { title: "Weather Alert", content: `❄️ Snow/cold today (${date}). Protect sensitive plants.` };
+  // 🌦️ Keyword-based alerts (broadened for OpenWeatherMap terms)
+  if (
+    weatherText.includes("clear") ||
+    weatherText.includes("sunny")
+  ) {
+    return {
+      title: "☀️ Clear Sky Alert",
+      content: `It's a clear day with ${temperature ?? "pleasant"}°C. Water your plants early morning or late evening to avoid evaporation.`,
+    };
+  }
 
-  return null;
-};
+  if (
+    weatherText.includes("rain") ||
+    weatherText.includes("drizzle") ||
+    weatherText.includes("thunderstorm")
+  ) {
+    return {
+      title: "🌧️ Rain Alert",
+      content: "Rainy conditions detected. Avoid overwatering — your plants are already getting moisture!",
+    };
+  }
+
+  if (weatherText.includes("cloud")) {
+    return {
+      title: "⛅ Cloudy Weather",
+      content: "Partly cloudy skies today. A perfect day for photosynthesis — continue regular watering.",
+    };
+  }
+
+  if (
+    weatherText.includes("fog") ||
+    weatherText.includes("mist") ||
+    weatherText.includes("haze")
+  ) {
+    return {
+      title: "🌫️ Low Visibility Alert",
+      content: "Foggy or misty conditions — make sure your plants receive enough light today.",
+    };
+  }
+
+  // 🌡️ Temperature-based alerts
+  if (temperature !== null) {
+    if (temperature > 35) {
+      return {
+        title: "🔥 Hot Weather Alert",
+        content: `Temperature is around ${temperature}°C — water your plants twice daily and provide shade if possible.`,
+      };
+    } else if (temperature < 10) {
+      return {
+        title: "❄️ Cold Weather Alert",
+        content: `Chilly weather (${temperature}°C)! Keep sensitive plants indoors or cover them at night.`,
+      };
+    }
+  }
+
+  // 🌿 Default mild message
+  return {
+    title: "🌿 Weather Update",
+    content: "Pleasant day ahead. Maintain your regular plant care routine.",
+  };
+}

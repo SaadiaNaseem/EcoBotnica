@@ -1,4 +1,4 @@
-// controllers/userController.js - COMPLETE COMBINED VERSION
+// controllers/userController.js - COMPLETE UPDATED
 import userModel from "../models/userModel.js";
 import OTPSchema from "../models/OTP.js";
 import validator from "validator";
@@ -154,15 +154,6 @@ const forgotPassword = async (req, res) => {
       return res.json({ 
         success: false, 
         message: "Email service is temporarily unavailable." 
-      });
-    }
-
-    // Check if user exists
-    const userExists = await userModel.findOne({ email });
-    if (!userExists) {
-      return res.json({ 
-        success: false, 
-        message: "No account found with this email address." 
       });
     }
 
@@ -322,22 +313,30 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Find user
-    const user = await userModel.findOne({ email });
+    // Find user - if exists update, else create new
+    let user = await userModel.findOne({ email });
     
-    if (!user) {
-      return res.json({
-        success: false,
-        message: "User not found. Please register first.",
+    if (user) {
+      // User exists - update password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      user.password = hashedPassword;
+      await user.save();
+      console.log('✅ Password updated for existing user');
+    } else {
+      // Create new account
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      
+      user = new userModel({
+        name: email.split('@')[0],
+        email: email,
+        password: hashedPassword,
       });
+      
+      await user.save();
+      console.log('✅ New user created with reset password');
     }
-
-    // Update password for existing user
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    user.password = hashedPassword;
-    await user.save();
-    console.log('✅ Password updated successfully');
 
     // Delete OTP record
     await OTPSchema.deleteOne({ email: email });

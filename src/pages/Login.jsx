@@ -13,13 +13,13 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
 
+  // 👇 Location se ProtectedRoute ka msg catch karenge
   const location = useLocation();
   const msg = location.state?.msg || "";
 
   const onSubmitHandler = async (event) => {
     console.log("Form submitted");
     event.preventDefault();
-
     try {
       // --- ADMIN LOGIN CHECK ---
       if (currentState === 'Admin') {
@@ -33,7 +33,7 @@ const Login = () => {
 
         if (email === adminEmail && password === adminPassword) {
           toast.success('Admin login successful');
-          navigate('/admindashboard');
+          navigate('/admindashboard');   // ✅ direct admin dashboard
           return;
         } else {
           toast.error('Invalid admin credentials');
@@ -41,67 +41,56 @@ const Login = () => {
         }
       }
 
-      // --- USER REGISTRATION OR LOGIN ---
-      let response;
+      // --- USER SIGN UP ---
       if (currentState === 'Sign up') {
-        response = await axios.post(
-          backendUrl + '/api/user/register',
-          { name, email, password }
-        );
-        console.log("Register Response:", response.data);
-      } else {
-        response = await axios.post(
-          backendUrl + '/api/user/login',
-          { email, password }
-        );
-        console.log("Login Response:", response.data);
-      }
+        const response = await axios.post(backendUrl + '/api/user/register', { name, email, password });
+        console.log("Register Response:", response.data);  // Debugging log
+        if (response.data.success) {
+          setToken(response.data.token);
+          localStorage.setItem('token', response.data.token);
 
-      if (response.data.success) {
-        setToken(response.data.token);
-        localStorage.setItem("token", response.data.token);
-
-        if (response.data.user) {
-          console.log("Saving User Data to LocalStorage:", response.data.user);
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-          if (response.data.user._id) {
-            localStorage.setItem("userId", response.data.user._id);
+          // Save user as well
+          if (response.data.user) {
+            console.log("Saving User Data to LocalStorage:", response.data.user);  // Debugging log
+            localStorage.setItem('user', JSON.stringify(response.data.user));
           }
+        } else {
+          toast.error(response.data.message);
         }
-        
-        toast.success(currentState === 'Sign up' ? "Signup successful!" : "Login successful!");
-        
-        // Navigate after successful login/signup (except for admin)
-        if (currentState !== 'Admin') {
-          navigate('/Ecom');
+      }
+      // --- USER LOGIN ---
+      else {
+        const response = await axios.post(backendUrl + '/api/user/login', { email, password });
+        console.log("Login Response:", response.data);  // Debugging log
+        if (response.data.success) {
+          setToken(response.data.token);
+          localStorage.setItem('token', response.data.token);
+
+          // Save user as well
+          if (response.data.user) {
+            console.log("Saving User Data to LocalStorage:", response.data.user);  // Debugging log
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            // also store userId (optional but keeps older code working)
+            if (response.data.user && response.data.user._id) {
+              localStorage.setItem('userId', response.data.user._id);
+            }
+          }
+        } else {
+          toast.error(response.data.message);
         }
-      } else {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("userId");
-        toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Error:", error);
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("userId");
-      toast.error(error.response?.data?.message || "Something went wrong. Please try again.");
+      console.log("Error:", error);  // Debugging log
+      toast.error(error.message);
     }
   };
 
   useEffect(() => {
     if (token && currentState !== 'Admin') {
-      navigate('/Ecom');
+      navigate('/Ecom')
     }
-  }, [token, navigate, currentState]);
-
-  // Reset form when switching between states
-  useEffect(() => {
-    setName('');
-    setEmail('');
-    setPassword('');
-  }, [currentState]);
+  }, [token, navigate, currentState])
 
   return (
     <form
@@ -113,12 +102,12 @@ const Login = () => {
         <hr className='border-none h-[1.5px] w-8 bg-gray-800' />
       </div>
 
-      {msg && <p className="text-red-500 text-sm text-center w-full">{msg}</p>}
+      {/* 👇 Dynamic message */}
+      {msg && <p className="text-red-500 text-sm">{msg}</p>}
 
       {/* Show Name input only in Sign Up */}
       {currentState === 'Sign up' && (
         <input
-          value={name}
           onChange={(e) => setName(e.target.value)}
           type="text"
           className='w-full px-3 py-2 border border-gray-800'
@@ -128,7 +117,6 @@ const Login = () => {
       )}
 
       <input
-        value={email}
         onChange={(e) => setEmail(e.target.value)}
         type="email"
         className='w-full px-3 py-2 border border-gray-800'
@@ -136,7 +124,6 @@ const Login = () => {
         required
       />
       <input
-        value={password}
         onChange={(e) => setPassword(e.target.value)}
         type="password"
         className='w-full px-3 py-2 border border-gray-800'
@@ -145,62 +132,26 @@ const Login = () => {
       />
 
       <div className='w-full flex justify-between text-sm mt-[-8px]'>
-        <p 
-          onClick={() => navigate('/forgot-password')} 
-          className='cursor-pointer hover:underline'
-        >
-          Forgot password?
-        </p>
-        
-        <div className='flex gap-3'>
-          {currentState === 'Login' && (
-            <>
-              <p 
-                onClick={() => setCurrentState('Sign up')} 
-                className='cursor-pointer hover:underline'
-              >
-                Create account
-              </p>
-              <p 
-                onClick={() => setCurrentState('Admin')} 
-                className='cursor-pointer hover:underline'
-              >
-                Admin Login
-              </p>
-            </>
-          )}
-          {currentState === 'Sign up' && (
-            <p 
-              onClick={() => setCurrentState('Login')} 
-              className='cursor-pointer hover:underline'
-            >
-              Login
-            </p>
-          )}
-          {currentState === 'Admin' && (
-            <p 
-              onClick={() => setCurrentState('Login')} 
-              className='cursor-pointer hover:underline'
-            >
-              User Login
-            </p>
-          )}
-        </div>
+        <p onClick={() => navigate('/forgot-password')} className='cursor-pointer'>Forgot password?</p>
+        {currentState === 'Login' && (
+          <p onClick={() => setCurrentState('Sign up')} className='cursor-pointer'>Create account</p>
+        )}
+        {currentState === 'Sign up' && (
+          <p onClick={() => setCurrentState('Login')} className='cursor-pointer'>Login</p>
+        )}
+        {currentState !== 'Admin' && (
+          <p onClick={() => setCurrentState('Admin')} className='cursor-pointer'>Login as Admin</p>
+        )}
       </div>
 
       <button
         type='submit'
-        className='bg-black text-white font-light px-8 py-2 mt-4 rounded-[20px] hover:bg-gray-800 transition-colors w-full'
+        className='bg-black text-white font-light px-8 py-2 mt-4 rounded-[20px]'
       >
-        {currentState === 'Login' 
-          ? 'Sign in' 
-          : currentState === 'Sign up' 
-            ? 'Sign up' 
-            : 'Admin Sign in'
-        }
+        {currentState === 'Login' ? 'Sign in' : currentState === 'Sign up' ? 'Sign up' : 'Admin Sign in'}
       </button>
     </form>
   )
 }
 
-export default Login;
+export default Login
