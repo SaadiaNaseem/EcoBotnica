@@ -27,6 +27,10 @@ import AddNewPlantProfile from './pages/AddNewPlantProfile';
 import CommunityChat from './pages/CommunityChat';
 import ChooseRole from './pages/chooseRole';
 import { ShopContext } from './context/ShopContext';
+import AdminDashboard from "./pages/AdminDashboard";
+import { DiseaseProvider } from './context/Disease';
+
+
 
 // ✅ Normal ProtectedRoute
 const ProtectedRoute = ({ children, message }) => {
@@ -74,6 +78,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
+
         <Route
           path='/plantationGuide'
           element={
@@ -81,6 +87,17 @@ const App = () => {
               <AiProvider>
                 <PlantationGuide />
               </AiProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path='/plantDoctor'
+          element={
+            <ProtectedRoute message="Please login to access Plant Doctor">
+              <DiseaseProvider>
+                <PlantDoctor />
+              </DiseaseProvider>
             </ProtectedRoute>
           }
         />
@@ -97,7 +114,10 @@ const App = () => {
         <Route path='/placeOrder' element={<PlaceOrder />} />
         <Route path='/orders' element={<Orders />} />
         <Route path='/' element={<PlantIdentification />} />
-        <Route path='/plantDoctor' element={<PlantDoctor />} />
+
+
+
+
         <Route path='/companionPlanting' element={<CompanionPlanting />} />
 
         {/* ✅ Ecom Special Protected Route */}
