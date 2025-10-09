@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema(
   {
     user: { type: String, required: true },
-    text: { type: String },
-    image: { type: String },
+    text: { type: String, default: "" },
+    image: { type: String, default: "" },
+    userId: { type: String },
     upvotes: { type: Number, default: 0 },
     downvotes: { type: Number, default: 0 },
   },

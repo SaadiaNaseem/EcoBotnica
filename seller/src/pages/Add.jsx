@@ -3,27 +3,27 @@ import { assets } from '../assets/assets'
 import axios from 'axios'
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify'
+import { motion } from 'framer-motion'
 
 const Add = ({ token }) => {
-
   const [image1, setImage1] = useState(null)
   const [image2, setImage2] = useState(null)
   const [image3, setImage3] = useState(null)
   const [image4, setImage4] = useState(null)
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("Plants");
-  const [subCategory, setSubCategory] = useState("Indoor");
-
-  const [bestseller, setBestseller] = useState(false);
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [price, setPrice] = useState("")
+  const [category, setCategory] = useState("Plants")
+  const [subCategory, setSubCategory] = useState("Indoor")
+  const [bestseller, setBestseller] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
+    setLoading(true)
+    
     try {
-      // console.log("Submitting form with data:", {name, description, price, category, subCategory, bestseller, image1, image2, image3, image4});
-
       const formData = new FormData()
       formData.append("name", name)
       formData.append("description", description)
@@ -40,6 +40,7 @@ const Add = ({ token }) => {
       const response = await axios.post(backendUrl + "/api/product/add", formData, { headers: { token } })
       if (response.data.success) {
         toast.success(response.data.message)
+        // Reset form
         setName("")
         setDescription("")
         setImage1(null)
@@ -47,121 +48,190 @@ const Add = ({ token }) => {
         setImage3(null)
         setImage4(null)
         setPrice("")
-      }
-
-      else {
+        setCategory("Plants")
+        setSubCategory("Indoor")
+        setBestseller(false)
+      } else {
         toast.error(response.data.message)
       }
     } catch (error) {
-      console.error("Error submitting product:", error.response?.data || error.message);
+      console.error("Error submitting product:", error.response?.data || error.message)
       toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
     }
   }
 
   return (
-    <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-3'>
-      <div>
-        <p className='mb-2'>Upload Image</p>
-        <div className='flex gap-2'>
-          <label htmlFor="image1">
-            <img className='w-20' src={!image1 ? assets.upload_area : URL.createObjectURL(image1)} alt="" />
-            <input onChange={(e) => setImage1(e.target.files[0])} type="file" id="image1" name="image1" hidden />
-          </label>
-          <label htmlFor="image2">
-            <img className='w-20' src={!image2 ? assets.upload_area : URL.createObjectURL(image2)} alt="" />
-            <input onChange={(e) => setImage2(e.target.files[0])} type="file" id="image2" name="image2" hidden />
-          </label>
-          <label htmlFor="image3">
-            <img className='w-20' src={!image3 ? assets.upload_area : URL.createObjectURL(image3)} alt="" />
-            <input onChange={(e) => setImage3(e.target.files[0])} type="file" id="image3" name="image3" hidden />
-          </label>
-          <label htmlFor="image4">
-            <img className='w-20' src={!image4 ? assets.upload_area : URL.createObjectURL(image4)} alt="" />
-            <input onChange={(e) => setImage4(e.target.files[0])} type="file" id="image4" name="image4" hidden />
-          </label>
-        </div>
-      </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-3xl font-bold text-gray-800 mb-6"
+      >
+        Add New Product
+      </motion.h1>
 
-      <div className='w-full'>
-        <p className='mb-2'>
-          Product Name
-        </p>
-        <input
-          name="name"
-          onChange={(e) => setName(e.target.value)}
-          value={name}
-          className='w-full max-w-[500px] px-3 py-2'
-          type="text"
-          placeholder='Type Here'
-          required
-        />
-      </div>
-      <div className='w-full'>
-        <p className='mb-3'>
-          Product Description
-        </p>
-        <textarea
-          name="description"
-          onChange={(e) => setDescription(e.target.value)}
-          value={description}
-          className='w-full max-w-[500px] px-3 py-2'
-          placeholder='Write content here...'
-          required
-        />
-      </div>
-      <div className='flex flex-col sm:flex-row gap-2 w-full sm:gap-8'>
-        <div>
-          <p className='mb-2'>Product Category</p>
-          <select
-            name="category"
-            onChange={(e) => setCategory(e.target.value)}
-            className='w-full px-3 py-2'
-            value={category}
-          >
-            <option value="Seeds">Seeds</option>
-            <option value="Fertilizers">Fertilizers</option>
-            <option value="Plants">Plants</option>
-          </select>
-        </div>
-        <div>
-          <p className='mb-2'>Sub category</p>
-          <select
-            name="subCategory"
-            onChange={(e) => setSubCategory(e.target.value)}
-            className='w-full px-3 py-2'
-            value={subCategory}
-          >
-            <option value="Indoor">Indoor</option>
-            <option value="Outdoor">Outdoor</option>
-          </select>
-        </div>
-        <div>
-          <p className='mb-2'>Product Price</p>
+      <motion.form 
+        onSubmit={onSubmitHandler} 
+        variants={formVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-white rounded-xl shadow-md p-6 space-y-6"
+      >
+        {/* Image Upload Section */}
+        <motion.div variants={itemVariants}>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Upload Product Images</h3>
+          <div className="flex gap-4 flex-wrap">
+            {[1, 2, 3, 4].map((num) => {
+              const imageState = [image1, image2, image3, image4][num - 1]
+              const setImageState = [setImage1, setImage2, setImage3, setImage4][num - 1]
+              
+              return (
+                <label key={num} htmlFor={`image${num}`} className="cursor-pointer">
+                  <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-green-500 transition-colors duration-200">
+                    <img 
+                      className="w-full h-full object-cover rounded-lg" 
+                      src={!imageState ? assets.upload_area : URL.createObjectURL(imageState)} 
+                      alt={`Upload ${num}`} 
+                    />
+                  </div>
+                  <input 
+                    onChange={(e) => setImageState(e.target.files[0])} 
+                    type="file" 
+                    id={`image${num}`} 
+                    name={`image${num}`} 
+                    hidden 
+                  />
+                </label>
+              )
+            })}
+          </div>
+        </motion.div>
+
+        {/* Product Name */}
+        <motion.div variants={itemVariants} className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Product Name</label>
           <input
-            name="price"
-            onChange={(e) => setPrice(e.target.value)}
-            value={price}
-            className=' w-full px-3 py-2 sm:w-[120px]'
-            type="number"
-            placeholder='34'
+            name="name"
+            onChange={(e) => setName(e.target.value)}
+            value={name}
+            className="w-full max-w-md px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+            type="text"
+            placeholder="Enter product name"
+            required
           />
-        </div>
-      </div>
+        </motion.div>
 
-      <div className=' flex gap-2 mt-2'>
-        <input
-          name="bestseller"
-          onChange={() => setBestseller(prev => !prev)}
-          checked={bestseller}
-          type="checkbox"
-          id='bestseller'
-        />
-        <label className='cursor-pointer' htmlFor="bestseller">Add to bestseller</label>
-      </div>
-      <button type='submit' className='w-28 py-3 mt-4 bg-black text-white'>
-        Add Product
-      </button>
-    </form>
+        {/* Product Description */}
+        <motion.div variants={itemVariants} className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Product Description</label>
+          <textarea
+            name="description"
+            onChange={(e) => setDescription(e.target.value)}
+            value={description}
+            className="w-full max-w-md px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
+            placeholder="Write product description here..."
+            rows="4"
+            required
+          />
+        </motion.div>
+
+        {/* Category, Subcategory, and Price */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Product Category</label>
+            <select
+              name="category"
+              onChange={(e) => setCategory(e.target.value)}
+              value={category}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="Seeds">Seeds</option>
+              <option value="Fertilizers">Fertilizers</option>
+              <option value="Plants">Plants</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Sub Category</label>
+            <select
+              name="subCategory"
+              onChange={(e) => setSubCategory(e.target.value)}
+              value={subCategory}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="Indoor">Indoor</option>
+              <option value="Outdoor">Outdoor</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Product Price (PKR)</label>
+            <input
+              name="price"
+              onChange={(e) => setPrice(e.target.value)}
+              value={price}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+              type="number"
+              placeholder="Enter price"
+              required
+            />
+          </div>
+        </motion.div>
+
+        {/* Bestseller Checkbox */}
+        <motion.div variants={itemVariants} className="flex items-center gap-3">
+          <input
+            name="bestseller"
+            onChange={() => setBestseller(prev => !prev)}
+            checked={bestseller}
+            type="checkbox"
+            id='bestseller'
+            className="w-5 h-5 text-green-600 focus:ring-green-500 rounded"
+          />
+          <label className="text-gray-700 font-medium cursor-pointer" htmlFor="bestseller">
+            Add to bestseller collection
+          </label>
+        </motion.div>
+
+        {/* Submit Button */}
+        <motion.button 
+          variants={itemVariants}
+          type='submit' 
+          disabled={loading}
+          className={`w-32 py-3 rounded-lg font-semibold transition-all duration-200 ${
+            loading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-lg'
+          }`}
+        >
+          {loading ? 'Adding...' : 'Add Product'}
+        </motion.button>
+      </motion.form>
+    </div>
   )
 }
 

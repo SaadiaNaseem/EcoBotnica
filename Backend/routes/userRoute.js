@@ -1,12 +1,40 @@
+// backend/routes/userRoute.js
 import express from 'express';
-import { loginUser, registerUser, adminLogin } from '../controllers/userController.js';
+import { 
+  loginUser, 
+  registerUser, 
+  adminLogin, 
+  forgotPassword, 
+  verifyOTP, 
+  resetPassword 
+} from '../controllers/userController.js';
+import { protect } from '../middleware/auth.js';
+import User from '../models/userModel.js';
 
-const userRouter = express.Router();
+const router = express.Router();
 
-userRouter.post('/register', registerUser);
-userRouter.post('/login',    loginUser);
-userRouter.post('/admin',    adminLogin);
+// Authentication routes
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/admin', adminLogin);
 
+// Password reset routes
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-otp', verifyOTP);
+router.post('/reset-password', resetPassword);
 
+// Protected routes - require authentication
+// Return logged-in user (use protect middleware which sets req.user)
+router.get('/me', protect, async (req, res) => {
+  try {
+    // protect sets req.user and req.userId
+    const userDoc = req.user || (req.userId ? await User.findById(req.userId).select('-password') : null);
+    if (!userDoc) return res.status(404).json({ success: false, message: 'User not found' });
+    return res.json({ success: true, user: userDoc });
+  } catch (error) {
+    console.error("Error in /user/me:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-export default userRouter;
+export default router;

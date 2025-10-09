@@ -1,7 +1,5 @@
-// src/components/EAdashOrderDetails.jsx
 import React from "react";
 import { motion } from "framer-motion";
-import { orderDetails } from "../data/EAdashDummyData";
 
 const listVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -12,16 +10,16 @@ const listVariants = {
   }),
 };
 
-const EAdashOrderDetails = () => {
-  const hasOrders = orderDetails && orderDetails.length > 0;
+const EAdashOrderDetails = ({ orders = [] }) => {
+  const hasOrders = orders && orders.length > 0;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4">
-      <h3 className="font-semibold text-gray-800 mb-3">Order Details</h3>
+      <h3 className="font-semibold text-gray-800 mb-3">Recent Orders</h3>
 
       {hasOrders ? (
         <ul>
-          {orderDetails.map((item, i) => (
+          {orders.map((item, i) => (
             <motion.li
               key={i}
               custom={i}
@@ -37,7 +35,7 @@ const EAdashOrderDetails = () => {
         </ul>
       ) : (
         <div className="text-gray-400 text-center py-6 italic">
-          No order till now
+          No orders yet
         </div>
       )}
     </div>

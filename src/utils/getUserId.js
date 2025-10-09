@@ -9,8 +9,6 @@ export const getUserId = () => {
     return null;
   }
 
-
-
 };
 
 export const getUser = () => {
@@ -22,3 +20,4 @@ export const getUser = () => {
     return null;
   }
 };
+
