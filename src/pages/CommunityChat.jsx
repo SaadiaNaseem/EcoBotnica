@@ -12,20 +12,24 @@ function CommunityChat() {
   const [messages, setMessages] = useState([
     {
       user: "EcoBotanica Team",
-      text: "Welcome to the EcoBotanica Community! 🌱 Share your plant tips here.",
+      text: "Welcome to EcoBotanica Community! 🌱 Share your plant tips here.",
       upvotes: 0,
       downvotes: 0,
+      timestamp: new Date().toISOString(),
+      _id: "system-welcome"
     },
   ]);
 
   const [reportingIndex, setReportingIndex] = useState(null);
   const [reportReason, setReportReason] = useState("");
   const [customReason, setCustomReason] = useState("");
-  const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const chatEndRef = useRef(null);
   const navigate = useNavigate();
   const socketRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,8 +41,16 @@ function CommunityChat() {
 
       socketRef.current = io("http://localhost:4000");
 
+      socketRef.current.on("connect", () => {
+        socketRef.current.emit("joinChat");
+      });
+
       socketRef.current.on("newMessage", (newMsg) => {
-        setMessages((prev) => [...prev, newMsg]);
+        setMessages((prev) => {
+          const updated = [...prev, newMsg];
+          setTimeout(scrollToBottom, 50);
+          return updated;
+        });
       });
 
       socketRef.current.on("updateMessage", (updatedMsg) => {
@@ -48,54 +60,87 @@ function CommunityChat() {
       });
 
       return () => {
-        socketRef.current.disconnect();
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
       };
     }
   }, [navigate]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!isLoading) {
+      scrollToBottom();
+    }
+  }, [isLoading]);
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  };
 
   const fetchMessages = async () => {
     try {
+      setIsLoading(true);
       const res = await axios.get("http://localhost:4000/api/messages");
+      const fetchedMessages = res.data.map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp || msg.createdAt || new Date().toISOString()
+      }));
+
       setMessages([
         {
           user: "EcoBotanica Team",
-          text: "Welcome to the EcoBotanica Community! 🌱 Share your plant tips here.",
+          text: "Welcome to EcoBotanica Community! 🌱 Share your plant tips here.",
           upvotes: 0,
           downvotes: 0,
+          timestamp: new Date().toISOString(),
+          _id: "system-welcome"
         },
-        ...res.data,
+        ...fetchedMessages,
       ]);
     } catch (err) {
       console.error("Failed to fetch messages", err);
+    } finally {
+      setIsLoading(false);
+      setTimeout(scrollToBottom, 100);
     }
   };
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() && !image) return;
 
     const user = getUser();
     if (!user) return navigate("/login");
 
     try {
-      await axios.post("http://localhost:4000/api/messages", {
+      const messageData = {
         text: message,
         userId: user._id,
         userName: user.name,
-      });
+        image: image,
+        timestamp: new Date().toISOString()
+      };
+
+      await axios.post("http://localhost:4000/api/messages", messageData);
+
       setMessage("");
+      setImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to send message:", err);
+      alert("Failed to send message. Please try again.");
     }
   };
 
   const handleVote = async (index, type) => {
     const msg = messages[index];
+    if (!msg._id || msg._id === "system-welcome") return;
+
     try {
-      await axios.post(
+      await axios.patch(
         `http://localhost:4000/api/messages/${msg._id}/vote`,
         { type }
       );
@@ -107,6 +152,11 @@ function CommunityChat() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result);
@@ -115,8 +165,18 @@ function CommunityChat() {
     }
   };
 
+  const removeImage = () => {
+    setImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleReportSubmit = async (index) => {
-    if (!reportReason) return alert("Please select a reason to report.");
+    if (!reportReason) {
+      alert("Please select a reason to report.");
+      return;
+    }
 
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
@@ -124,19 +184,19 @@ function CommunityChat() {
     const msg = messages[index];
     const reasonToSave = reportReason === "other" ? customReason : reportReason;
 
-    const newReport = {
-      reportedUser: msg.user,
-      reason: reasonToSave,
-      messageText: msg.text,
-    };
-
     try {
-      await axios.post("http://localhost:4000/api/report", newReport, {
+      await axios.post("http://localhost:4000/api/report", {
+        reportedUser: msg.user,
+        reason: reasonToSave,
+        messageText: msg.text,
+      }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setReports([...reports, newReport]);
+
+      alert("Report submitted successfully!");
     } catch (err) {
       console.error("Failed to submit report", err);
+      alert("Failed to submit report. Please try again.");
     }
 
     setReportingIndex(null);
@@ -144,139 +204,226 @@ function CommunityChat() {
     setCustomReason("");
   };
 
+  const formatTime = (timestamp) => {
+    if (!timestamp) return 'Now';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (!joined) return null;
 
   return (
-    <div className="flex flex-col h-[70vh] max-w-2xl mx-auto mt-10 bg-white border border-gray-200 rounded-lg shadow-md p-4">
-      <div className="text-2xl mb-4">
-        <Title text1={"COMMUNITY"} text2={"CHAT"} />
+    <div className="flex flex-col h-[80vh] max-w-3xl mx-auto mt-6 bg-white rounded-xl shadow-lg border border-green-100 overflow-hidden">
+      {/* Compact Header */}
+      <div className="bg-gradient-to-r from-green-300 to-green-600 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-white text-lg">🌿</span>
+            <h1 className="text-white font-semibold">Community Chat</h1>
+          </div>
+          <div className="flex items-center space-x-2 bg-green-100 px-2 py-1 rounded">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-green-700 text-xs">{messages.length} messages</span>
+          </div>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`p-2 rounded-md ${
-              msg.user === "You"
-                ? "bg-green-100 self-end text-right ml-auto"
-                : "bg-gray-100 self-start text-left"
-            }  max-w-[80%]`}
-          >
-            <p className="text-sm font-semibold text-green-700">{msg.user}</p>
-            <p className="text-gray-800 whitespace-pre-wrap break-words">
-              {msg.text}
-            </p>
-            {msg.image && (
-              <img
-                src={msg.image}
-                alt="Uploaded"
-                className="mt-2 rounded-md max-h-40"
-              />
-            )}
-            <div className="mt-2 flex items-center gap-3 text-sm text-gray-600">
-              <button onClick={() => handleVote(index, "up")}>
-                👍 {msg.upvotes}
-              </button>
-              <button onClick={() => handleVote(index, "down")}>
-                👎 {msg.downvotes}
-              </button>
-              {msg.user !== "You" && (
-                <button
-                  onClick={() =>
-                    setReportingIndex(reportingIndex === index ? null : index)
-                  }
-                  className="text-red-600 hover:underline"
+
+      {/* Messages Container */}
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto bg-green-50 p-3 space-y-2"
+      >
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+          </div>
+        ) : (
+          messages.map((msg, index) => {
+            const isCurrentUser = msg.user === getUser()?.name;
+            const isSystem = msg.user === "EcoBotanica Team";
+
+            return (
+              <div
+                key={msg._id || index}
+                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[90%] rounded-lg p-3 ${isSystem
+                      ? 'bg-yellow-100 border border-yellow-200'
+                      : isCurrentUser
+                        ? 'bg-green-400 text-white'
+                        : 'bg-white border border-green-200'
+                    }`}
                 >
-                  🚩 Report
-                </button>
-              )}
-            </div>
+                  {/* Message Header */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-xs font-semibold ${isSystem ? 'text-yellow-700' : isCurrentUser ? 'text-green-100' : 'text-green-700'
+                      }`}>
+                      {msg.user}
+                    </span>
+                    <span className={`text-xs ${isSystem ? 'text-yellow-600' : isCurrentUser ? 'text-green-100' : 'text-gray-500'
+                      }`}>
+                      {formatTime(msg.timestamp)}
+                    </span>
+                  </div>
 
-            {reportingIndex === index && (
-              <div className="mt-2 p-2 border rounded bg-white shadow-sm">
-                <label className="text-sm block mb-1">Reason:</label>
-                <select
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  className="border w-full rounded px-2 py-1 mb-2"
-                >
-                  <option value="">-- Select reason --</option>
-                  <option value="spam">Spam</option>
-                  <option value="abuse">Abusive Content</option>
-                  <option value="misinfo">Misinformation</option>
-                  <option value="other">Other</option>
-                </select>
+                  {/* Message Content */}
+                  {msg.text && (
+                    <p className={`text-sm whitespace-pre-wrap break-words ${isCurrentUser ? 'text-white' : 'text-gray-700'
+                      }`}>
+                      {msg.text}
+                    </p>
+                  )}
 
-                {reportReason === "other" && (
-                  <input
-                    type="text"
-                    placeholder="Type your reason"
-                    value={customReason}
-                    onChange={(e) => setCustomReason(e.target.value)}
-                    className="border w-full rounded px-2 py-1 mb-2"
-                  />
-                )}
+                  {/* Image */}
+                  {msg.image && (
+                    <div className="mt-2">
+                      <img
+                        src={msg.image}
+                        alt="Uploaded content"
+                        className="rounded max-h-48 max-w-full object-contain border"
+                      />
+                    </div>
+                  )}
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleReportSubmit(index)}
-                    className="bg-red-600 text-white px-3 py-1 rounded text-sm"
-                  >
-                    Submit
-                  </button>
-                  <button
-                    onClick={() => setReportingIndex(null)}
-                    className="bg-gray-300 px-3 py-1 rounded text-sm"
-                  >
-                    Cancel
-                  </button>
+                  {/* Actions */}
+                  {!isSystem && (
+                    <div className={`flex items-center gap-3 mt-2 text-xs ${isCurrentUser ? 'text-green-100' : 'text-gray-500'
+                      }`}>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleVote(index, "up")}
+                          className="flex items-center gap-1 hover:scale-110 transition-transform"
+                        >
+                          👍 <span>{msg.upvotes || 0}</span>
+                        </button>
+                        <button
+                          onClick={() => handleVote(index, "down")}
+                          className="flex items-center gap-1 hover:scale-110 transition-transform"
+                        >
+                          👎 <span>{msg.downvotes || 0}</span>
+                        </button>
+                      </div>
+
+                      {!isCurrentUser && (
+                        <button
+                          onClick={() => setReportingIndex(reportingIndex === index ? null : index)}
+                          className="text-red-500 hover:text-red-600 text-xs"
+                        >
+                          Report
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Report Form */}
+                  {reportingIndex === index && (
+                    <div className="mt-2 p-2 bg-white rounded border border-red-200">
+                      <select
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        className="w-full text-xs rounded px-2 py-1 border border-gray-300 mb-1"
+                      >
+                        <option value="">Select reason...</option>
+                        <option value="spam">Spam</option>
+                        <option value="abuse">Abusive Content</option>
+                        <option value="misinfo">Misinformation</option>
+                        <option value="other">Other</option>
+                      </select>
+
+                      {reportReason === "other" && (
+                        <input
+                          type="text"
+                          placeholder="Specify reason..."
+                          value={customReason}
+                          onChange={(e) => setCustomReason(e.target.value)}
+                          className="w-full text-xs rounded px-2 py-1 border border-gray-300 mb-1"
+                        />
+                      )}
+
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleReportSubmit(index)}
+                          className="flex-1 bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                        >
+                          Submit
+                        </button>
+                        <button
+                          onClick={() => setReportingIndex(null)}
+                          className="flex-1 bg-gray-300 px-2 py-1 rounded text-xs hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-        ))}
+            );
+          })
+        )}
         <div ref={chatEndRef} />
       </div>
 
-      <div className="flex items-center mt-4 gap-2 relative">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-          id="upload"
-        />
-        <label
-          htmlFor="upload"
-          className="relative group cursor-pointer px-3 py-2 bg-gray-200 rounded-md text-sm hover:bg-gray-300 transition"
-        >
-          📁
-          <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none z-10 whitespace-nowrap">
-            Attach an image
-          </span>
-        </label>
+      {/* Input Area */}
+      <div className="border-t border-green-200 bg-white p-3">
+        {/* Image Preview */}
+        {image && (
+          <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200 mb-2">
+            <img
+              src={image}
+              alt="Preview"
+              className="h-10 w-10 object-cover rounded border"
+            />
+            <span className="text-green-700 text-xs flex-1">Image ready</span>
+            <button
+              onClick={removeImage}
+              className="text-red-500 hover:text-red-700 text-sm"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
-        <input
-          type="text"
-          placeholder="Write a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
-          }}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+            id="upload"
+          />
+          <label
+            htmlFor="upload"
+            className="flex items-center justify-center w-8 h-8 bg-green-100 text-green-500 rounded cursor-pointer hover:bg-green-200 text-sm"
+          >
+            📎
+          </label>
 
-        <button
-          onClick={handleSend}
-          className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-full text-sm transition flex items-center gap-2"
-        >
-          <span>Send</span> <span>📨</span>
-        </button>
+          <input
+            type="text"
+            placeholder="Type your message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSend();
+            }}
+            className="flex-1 border border-green-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+          />
+
+          <button
+            onClick={handleSend}
+            disabled={!message.trim() && !image}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1"
+          >
+            <span>Send</span>
+          </button>
+        </div>
       </div>
-
-      {image && (
-        <div className="mt-2 text-sm text-gray-600">📷 Image attached</div>
-      )}
     </div>
   );
 }

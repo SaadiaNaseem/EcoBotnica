@@ -1,4 +1,4 @@
-// context/Disease.jsx
+// context/disease.jsx
 import React, { createContext, useState } from "react";
 import axios from "axios";
 
@@ -12,6 +12,7 @@ export const DiseaseProvider = ({ children }) => {
   const diagnoseDisease = async (imageFile) => {
     setLoading(true);
     setError("");
+    setResponse(""); // Clear previous response
     
     try {
       // First, send image to your Flask API for disease identification
@@ -28,6 +29,8 @@ export const DiseaseProvider = ({ children }) => {
       }
 
       const diagnosisData = await diagnosisRes.json();
+      console.log("Diagnosis API Response:", diagnosisData);
+
       const diseaseName = diagnosisData.diagnosis;
 
       // Then, get detailed disease info from AI
@@ -35,19 +38,19 @@ export const DiseaseProvider = ({ children }) => {
 
 If the input is a valid plant disease name, generate detailed disease information using the format below:
 
-• **Identified Disease**:
+Identified Disease:
   - Mention the detected disease for the plant (e.g., Leaf Yellowing, Root Rot, etc.).
 
-• **Severity**:
+Severity:
   - State the severity of the disease (e.g., Mild, Moderate, Severe).
 
-• **Cause**:
+Cause:
   - Explain the potential causes of the disease (e.g., nutrient deficiencies, overwatering, pests, etc.).
 
-• **Symptoms**:
+Symptoms:
   - List common symptoms (e.g., yellowing leaves, weak growth, wilting).
 
-• **Treatments**:
+Treatments:
   - Provide specific steps for treatment:
     - Watering: Recommended watering practices (e.g., allow soil to dry, avoid overwatering).
     - Fertilization: Suggestions on fertilizers or nutrients to apply (e.g., balanced fertilizer, iron supplements).
@@ -55,7 +58,7 @@ If the input is a valid plant disease name, generate detailed disease informatio
     - Light: Ideal lighting conditions (e.g., bright, indirect sunlight).
     - Pest Control: If applicable, suggest treatments for pests (e.g., neem oil for spider mites).
 
-• **Urgency**:
+Urgency:
   - Specify the urgency of treatment (e.g., Low, Moderate, High).
 
 BUT — if the input is not a valid plant disease name or if it seems like a general question or sentence, reply with:
@@ -71,16 +74,20 @@ Here is the user input: "${diseaseName}"`;
         },
         {
           headers: {
-            Authorization: "Bearer APIKEY", // Replace with your actual API key
+            Authorization: "Bearer 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", // You need to add your actual API key
             "Content-Type": "application/json",
           },
         }
       );
       
-      setResponse(aiRes.data.choices[0].message.content);
-      return aiRes.data.choices[0].message.content;
+      const aiResponse = aiRes.data.choices[0].message.content;
+      setResponse(aiResponse); // Set state with the response
+      console.log("AI Response:", aiResponse);
       
+      return aiResponse;
+
     } catch (err) {
+      console.error("Error in diagnoseDisease:", err);
       const errorMsg = "❌ Error fetching data. Please try again.";
       setError(errorMsg);
       setResponse(errorMsg);

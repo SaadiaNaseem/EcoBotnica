@@ -1,55 +1,50 @@
 import React from "react";
-import { Line } from "react-chartjs-2";
 import { motion } from "framer-motion";
-import {
-  Chart as ChartJS,
-  LineElement,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
 
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
+const listVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.4 },
+  }),
+};
 
-const EAdashLineChart = () => {
-  const data = {
-    labels: ["05 Dec", "10 Dec", "15 Dec", "20 Dec", "25 Dec"],
-    datasets: [
-      {
-        label: "Orders",
-        data: [50, 120, 90, 150, 130],
-        borderColor: "#22c55e",
-        backgroundColor: "rgba(34,197,94,0.2)",
-        tension: 0.4,
-        fill: true,
-      },
-    ],
-  };
-
-  const options = {
-    plugins: {
-      legend: {
-        labels: {
-          usePointStyle: true,
-          pointStyle: "circle", // makes it circular
-        },
-      },
-    },
-  };
+const EAdashOrderDetails = ({ orders = [] }) => {
+  const hasOrders = orders && orders.length > 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white rounded-xl shadow-md p-4"
-    >
-      <h3 className="font-semibold mb-3 text-gray-800">Order In This Month</h3>
-      <Line data={data} options={options} />
-    </motion.div>
+    <div className="bg-white rounded-xl shadow-md p-4">
+      <h3 className="font-semibold text-gray-800 mb-3">Recent Orders</h3>
+
+      {hasOrders ? (
+        <ul className="space-y-3">
+          {orders.map((order, i) => (
+            <motion.li
+              key={order.id || i}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={listVariants}
+              className="flex justify-between items-start border-b pb-3 text-gray-600"
+            >
+              <div className="flex-1">
+                <p className="font-medium text-sm">{order.text}</p>
+                {order.customer && (
+                  <p className="text-xs text-gray-400 mt-1">Customer: {order.customer}</p>
+                )}
+              </div>
+              <span className="text-sm text-gray-400 ml-2">{order.time}</span>
+            </motion.li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-gray-400 text-center py-6 italic">
+          No orders yet
+        </div>
+      )}
+    </div>
   );
 };
 
-export default EAdashLineChart;
+export default EAdashOrderDetails;
