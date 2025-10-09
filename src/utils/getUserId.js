@@ -8,9 +8,6 @@ export const getUserId = () => {
   } catch (err) {
     return null;
   }
-
-
-
 };
 
 export const getUser = () => {
@@ -23,4 +20,3 @@ export const getUser = () => {
   }
 };
 
-};
