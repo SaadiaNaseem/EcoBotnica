@@ -38,7 +38,7 @@ export const ChatbotProvider = ({ children }) => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer API_KEY`
           }
         }
       );

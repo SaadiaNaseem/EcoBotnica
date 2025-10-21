@@ -9,7 +9,7 @@ export const WeatherProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [weeklyWeather, setWeeklyWeather] = useState([]);
 
-  const OPENWEATHER_API_KEY = "c9623f76d598c02467c11c17924e0575";
+  const OPENWEATHER_API_KEY = "weather key";
 
   const fetchWeeklyWeather = async (location) => {
     if (!location) return;

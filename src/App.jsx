@@ -32,6 +32,14 @@ import { DiseaseProvider } from './context/disease';
 import CommunityComplaints from './pages/CommunityComplaints';
 import ForgotPassword from './compononts/ForgotPassword';
 
+// ADDED FROM SECOND CODE
+import NotificationsPage from "./pages/NotificationsPage";
+import VisualAidPage from './pages/VisualAidPage';
+import { WeatherProvider } from "./context/WeatherContext";
+import { ChatbotProvider } from "./context/ChatbotContext";
+import { VisualAidProvider } from "./context/VisualAidContext";
+import { MistakeProvider } from "./context/MistakeContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 // ✅ Normal ProtectedRoute
 const ProtectedRoute = ({ children, message }) => {
@@ -40,7 +48,7 @@ const ProtectedRoute = ({ children, message }) => {
 
   if (!token) {
     return <Navigate to="/login" state={{ from: location, msg: message }} replace />;
-  }+3
+  }
   return children;
 };
 
@@ -75,10 +83,30 @@ const App = () => {
           path='/plantCare'
           element={
             <ProtectedRoute message="Please login to access Plant Care Assistant">
-              <PlantCare />
+              {/* ADDED FROM SECOND CODE */}
+              <ChatbotProvider>
+                <WeatherProvider>
+                  <NotificationProvider>
+                    <PlantCare />
+                  </NotificationProvider>
+                </WeatherProvider>
+              </ChatbotProvider>
             </ProtectedRoute>
           }
         />
+        
+        {/* ADDED FROM SECOND CODE */}
+        <Route
+          path='/notification'
+          element={
+            <ProtectedRoute message="Please login to access notifications">
+              <NotificationProvider>
+                <NotificationsPage />
+              </NotificationProvider>
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
 
         <Route
@@ -86,7 +114,28 @@ const App = () => {
           element={
             <ProtectedRoute message="Please login to access Plantation Guide">
               <AiProvider>
-                <PlantationGuide />
+                {/* ADDED FROM SECOND CODE */}
+                <VisualAidProvider>
+                  <MistakeProvider>
+                    <PlantationGuide />
+                  </MistakeProvider>
+                </VisualAidProvider>
+              </AiProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ADDED FROM SECOND CODE */}
+        <Route
+          path="/visual-aid"
+          element={
+            <ProtectedRoute message="Please login to access Visual Aids">
+              <AiProvider>
+                <VisualAidProvider>
+                  <MistakeProvider>
+                    <VisualAidPage />
+                  </MistakeProvider>
+                </VisualAidProvider>
               </AiProvider>
             </ProtectedRoute>
           }
@@ -104,8 +153,8 @@ const App = () => {
         />
 
         {/* ✅ Public Routes */}
-                <Route path="/communityComplaints" element={<CommunityComplaints />} />
-<Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/communityComplaints" element={<CommunityComplaints />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route path='/PlantProfile' element={<PlantProfile />} />
         <Route path='/addnewplantprofile' element={<AddNewPlantProfile />} />
@@ -118,10 +167,6 @@ const App = () => {
         <Route path='/placeOrder' element={<PlaceOrder />} />
         <Route path='/orders' element={<Orders />} />
         <Route path='/' element={<PlantIdentification />} />
-
-
-
-
         <Route path='/companionPlanting' element={<CompanionPlanting />} />
 
         {/* ✅ Ecom Special Protected Route */}

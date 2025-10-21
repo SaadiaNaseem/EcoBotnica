@@ -1,23 +1,17 @@
-import express from 'express'
-import { placeOrder, placeOrderStripe, allOrders, userOrders, updateStatus, verifyStripe } from '../controllers/orderController.js'
-import adminAuth from '../middleware/adminAuth.js'
-import authUser from '../middleware/auth.js'
+import express from 'express';
+import { placeOrder, placeOrderStripe, allOrders, userOrders, updateStatus, verifyStripe } from '../controllers/orderController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import adminAuth from '../middleware/adminAuth.js'; // Keep if you have admin auth
 
-const orderRouter = express.Router()
+const orderRouter = express.Router();
 
-//Admin features
-orderRouter.post('/list', adminAuth, allOrders)
-orderRouter.post('/status', adminAuth, updateStatus)
+orderRouter.post('/place', authMiddleware, placeOrder);
+orderRouter.post('/stripe', authMiddleware, placeOrderStripe);
+orderRouter.post('/verifyStripe', authMiddleware, verifyStripe);
+orderRouter.post('/userorders', authMiddleware, userOrders);
 
-//payment
-orderRouter.post('/place', authUser, placeOrder)
-orderRouter.post('/stripe', authUser, placeOrderStripe)
+// Admin routes
+orderRouter.post('/list', adminAuth, allOrders);
+orderRouter.post('/status', adminAuth, updateStatus);
 
-//user
-orderRouter.post('/userorders', authUser, userOrders)
-
-//verify Payment
-orderRouter.post('/verifyStripe',authUser,verifyStripe)
-
- 
-export default orderRouter
+export default orderRouter;

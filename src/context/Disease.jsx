@@ -34,7 +34,42 @@ export const DiseaseProvider = ({ children }) => {
       const diseaseName = diagnosisData.diagnosis;
 
       // Then, get detailed disease info from AI
-      const fullPrompt = `You are a plant care assistant. The user will provide a plant name and the system will identify the disease and provide detailed information related to it.
+//       const fullPrompt = `You are a plant care assistant. The user will provide a plant name and the system will identify the disease and provide detailed information related to it. ignore the plant name, just based on disease
+
+// If the input is a valid plant disease name, generate detailed disease information in easy words so that a lay man can understand easily using the format below:
+
+// Identified Disease:
+//   - Mention the detected disease for the plant (e.g., Leaf Yellowing, Root Rot, etc.).
+
+// Severity:
+//   - State the severity of the disease (e.g., Mild, Moderate, Severe).
+
+// Cause:
+//   - Explain the potential causes of the disease (e.g., nutrient deficiencies, overwatering, pests, etc.).
+
+// Symptoms:
+//   - List common symptoms (e.g., yellowing leaves, weak growth, wilting).
+
+// Treatments:
+//   - Provide specific steps for treatment:
+//     - Watering: Recommended watering practices (e.g., allow soil to dry, avoid overwatering).
+//     - Fertilization: Suggestions on fertilizers or nutrients to apply (e.g., balanced fertilizer, iron supplements).
+//     - Pruning: How to prune affected parts of the plant (e.g., remove yellow leaves).
+//     - Light: Ideal lighting conditions (e.g., bright, indirect sunlight).
+//     - Pest Control: If applicable, suggest treatments for pests (e.g., neem oil for spider mites).
+
+// Urgency:
+//   - Specify the urgency of treatment (e.g., Low, Moderate, High).
+
+// BUT — if the input is not a valid plant disease name or if it seems like a general question or sentence, reply with:
+// no details found related to this disease.
+
+// Here is the user input: "${diseaseName}"`;
+
+
+
+
+const fullPrompt = `You are a plant care assistant. The user will provide a plant name and the system will identify the disease and provide detailed information related to it.
 
 If the input is a valid plant disease name, generate detailed disease information using the format below:
 

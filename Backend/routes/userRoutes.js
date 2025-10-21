@@ -1,21 +1,35 @@
-// backend/routes/userRoutes.js
+// routes/userRoutes.js (yeh use karo)
 import express from 'express';
-import { loginUser, registerUser, adminLogin } from '../controllers/userController.js';
-import { protect } from '../middleware/auth.js';
-import User from '../models/userModel.js';
+import { 
+  loginUser, 
+  registerUser, 
+  adminLogin, 
+  forgotPassword, 
+  verifyOTP, 
+  resetPassword 
+} from '../controllers/userController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import userModel from '../models/userModel.js';
 
-const router = express.Router();
+const userRouter = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.post('/admin', adminLogin);
+// Auth routes
+userRouter.post('/register', registerUser);
+userRouter.post('/login', loginUser);
+userRouter.post('/admin', adminLogin);
 
-// Return logged-in user (use protect middleware which sets req.user)
-router.get('/me', protect, async (req, res) => {
+// Password reset routes
+userRouter.post('/forgot-password', forgotPassword);
+userRouter.post('/verify-otp', verifyOTP);
+userRouter.post('/reset-password', resetPassword);
+
+// Profile route (jo dusri file mein tha)
+userRouter.get('/me', authMiddleware, async (req, res) => {
   try {
-    // protect sets req.user and req.userId
-    const userDoc = req.user || (req.userId ? await User.findById(req.userId).select('-password') : null);
-    if (!userDoc) return res.status(404).json({ success: false, message: 'User not found' });
+    const userDoc = await userModel.findById(req.user.id).select('-password');
+    if (!userDoc) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
     return res.json({ success: true, user: userDoc });
   } catch (error) {
     console.error("Error in /user/me:", error);
@@ -23,4 +37,4 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
-export default router;
+export default userRouter;
