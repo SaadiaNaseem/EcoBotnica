@@ -3,190 +3,236 @@ import EAdashStatCard from "../components/EAdashStatCard";
 import EAdashLineChart from "../components/EAdashLineChart";
 import EAdashPieChart from "../components/EAdashPieChart";
 import EAdashOrderDetails from "../components/EAdashOrderDetails";
-import EAdashCustomerReview from "../components/EAdashCustomerReview";
+import EAdashManageOrders from "../components/EAdashManageOrders";
 import { motion } from "framer-motion";
-import { statsData, orderDetails } from "../data/EAdashDummyData";
-import axios from 'axios';
-import { backendUrl } from '../App'; // Import from your App file
-import { toast } from 'react-toastify';
+import axios from "axios";
+import { backendUrl } from "../App";
+import { toast } from "react-toastify";
 
 const EAdashSellerDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     stats: [],
-    salesData: { labels: [], data: [] },
+    salesData: { labels: [], datasets: [] },
     orderStatus: { labels: [], dataValues: [] },
-    recentOrders: []
+    recentOrders: [],
+    allOrders: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Get token from localStorage (same as your Orders component)
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
 
-  // Fetch all data from backend using axios (same pattern as Orders)
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!token) {
-        setError("No authentication token found");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setError(null);
-        
-        // Fetch orders data using axios (same as your Orders component)
-        const response = await axios.post(
-          backendUrl + '/api/order/list', 
-          {}, 
-          { headers: { token } }
-        );
-
-        if (!response.data.success) {
-          throw new Error(response.data.message || 'Failed to fetch orders');
-        }
-
-        const orders = response.data.orders || [];
-
-        // Calculate stats from orders
-        const totalOrders = orders.length;
-        const successfulOrders = orders.filter(order => 
-          order.status === 'Delivered' || order.payment === true
-        ).length;
-        const totalRevenue = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
-        const pendingOrders = orders.filter(order => 
-          order.status === 'Pending' || order.status === 'Order Placed'
-        ).length;
-
-        // Prepare stats data - Using PKR instead of $
-        const stats = [
-          { title: "Total Orders", value: totalOrders.toString(), icon: "lock" },
-          { title: "Successful Orders", value: successfulOrders.toString(), icon: "users" },
-          { title: "Total Revenue", value: `PKR ${totalRevenue.toLocaleString()}`, icon: "dollar" },
-          {
-            title: "Add products in the store",
-            value: "",
-            icon: "add",
-            link: "/add",
-          }
-        ];
-
-        // Prepare sales chart data (last 7 days)
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (6 - i));
-          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
-
-        const salesChartData = last7Days.map((dateLabel, index) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (6 - index));
-          const dateString = date.toISOString().split('T')[0];
-          
-          const dayOrders = orders.filter(order => {
-            if (!order.date) return false;
-            const orderDate = new Date(order.date).toISOString().split('T')[0];
-            return orderDate === dateString;
-          });
-          
-          return dayOrders.length;
-        });
-
-        const salesData = {
-          labels: last7Days,
-          data: salesChartData
-        };
-
-        // Prepare order status data
-        const statusCount = {};
-        orders.forEach(order => {
-          const status = order.status || 'Unknown';
-          statusCount[status] = (statusCount[status] || 0) + 1;
-        });
-
-        const orderStatus = {
-          labels: Object.keys(statusCount),
-          dataValues: Object.values(statusCount)
-        };
-
-        // Prepare recent orders (using PKR)
-        const recentOrders = orders
-          .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-          .slice(0, 5)
-          .map(order => ({
-            id: order._id,
-            text: `${order.items.length} items - PKR ${order.amount || 0}`,
-            time: formatTimeAgo(order.date),
-            customer: `${order.address?.firstName || ''} ${order.address?.lastName || ''}`.trim()
-          }));
-
-        setDashboardData({
-          stats,
-          salesData,
-          orderStatus,
-          recentOrders
-        });
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setError(error.message);
-        toast.error('Failed to load dashboard data');
-        
-        // Fallback to dummy data if API fails - Using PKR
-        setDashboardData({
-          stats: [
-            { title: "Total Order", value: "32000", icon: "lock" },
-            { title: "Order Successful", value: "23000", icon: "users" },
-            { title: "Total Balance", value: "PKR 3,32,000", icon: "dollar" },
-            {
-              title: "Add products in the store",
-              value: "",
-              icon: "add",
-              link: "/add",
-            }
-          ],
-          salesData: { labels: ["05 Dec", "10 Dec", "15 Dec", "20 Dec", "25 Dec"], data: [50, 120, 90, 150, 130] },
-          orderStatus: { labels: ["Order Placed", "Packing", "Shipped", "Delivered"], dataValues: [30, 20, 15, 35] },
-          recentOrders: orderDetails.map(order => ({
-            ...order,
-            text: order.text.replace('$', 'PKR ')
-          }))
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [token]);
-
-  // Helper function to format time ago
   const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return 'Recently';
-    
+    if (!timestamp) return "Recently";
     const now = new Date();
     const orderDate = new Date(timestamp);
     const diffTime = Math.abs(now - orderDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return '1 day ago';
-    if (diffDays > 1) return `${diffDays} days ago`;
-    
-    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-    if (diffHours === 1) return '1 hour ago';
-    if (diffHours > 1) return `${diffHours} hours ago`;
-    
-    const diffMinutes = Math.ceil(diffTime / (1000 * 60));
-    return `${diffMinutes} minutes ago`;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      if (diffHours === 0) {
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        return diffMinutes <= 1 ? "Just now" : `${diffMinutes} minutes ago`;
+      }
+      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+    }
+    return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   };
 
-  if (loading) {
+  const fetchDashboardData = async () => {
+    if (!token) {
+      setError("No authentication token found");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+      const response = await axios.post(
+        backendUrl + "/api/order/list",
+        {},
+        { headers: { token } }
+      );
+
+      if (!response.data.success)
+        throw new Error(response.data.message || "Failed to fetch orders");
+
+      const orders = response.data.orders || [];
+      const totalOrders = orders.length;
+
+      // ✅ Successful orders = all Delivered orders (payment assumed done)
+      const successfulOrdersArr = orders.filter(
+        (order) => order.status === "Delivered"
+      );
+      const successfulOrders = successfulOrdersArr.length;
+
+      // ✅ Total revenue = sum of all Delivered order amounts
+      const totalRevenue = successfulOrdersArr.reduce(
+        (sum, order) => sum + (order.amount || 0),
+        0
+      );
+
+      // ✅ Count order statuses for pie chart
+      const statusCount = {};
+      orders.forEach((order) => {
+        const status = order.status || "Unknown";
+        statusCount[status] = (statusCount[status] || 0) + 1;
+      });
+
+      // ✅ Recent orders (this month)
+      const now = new Date();
+      const recentOrders = orders
+        .filter((order) => {
+          const orderDate = new Date(order.date);
+          return (
+            orderDate.getMonth() === now.getMonth() &&
+            orderDate.getFullYear() === now.getFullYear()
+          );
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5)
+        .map((order) => ({
+          id: order._id,
+          text: `${order.items.length} items - PKR ${order.amount || 0}`,
+          time: formatTimeAgo(order.date),
+          customer: `${order.address?.firstName || ""} ${
+            order.address?.lastName || ""
+          }`.trim(),
+        }));
+
+      // ✅ Stat cards
+      const stats = [
+        { title: "Total Orders", value: totalOrders.toString(), icon: "lock" },
+        {
+          title: "Successful Orders",
+          value: successfulOrders.toString(),
+          icon: "users",
+        },
+        {
+          title: "Total Revenue",
+          value: `PKR ${totalRevenue.toLocaleString()}`,
+          icon: "dollar",
+        },
+        {
+          title: "Add products in the store",
+          value: "",
+          icon: "add",
+          link: "/add",
+        },
+      ];
+
+      // ✅ Pie chart (Order status)
+      const orderStatus = {
+        labels: Object.keys(statusCount),
+        dataValues: Object.values(statusCount),
+      };
+
+      // ✅ Line chart: Total vs Delivered orders by month
+      const monthLabels = Array.from({ length: 12 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(i);
+        return date.toLocaleString("en-US", { month: "short" });
+      });
+
+      const monthlyTotalOrders = [];
+      const monthlyDeliveredOrders = [];
+
+      for (let i = 0; i < 12; i++) {
+        const total = orders.filter((order) => {
+          const d = new Date(order.date);
+          return (
+            d.getMonth() === i && d.getFullYear() === now.getFullYear()
+          );
+        }).length;
+
+        const delivered = orders.filter((order) => {
+          const d = new Date(order.date);
+          return (
+            d.getMonth() === i &&
+            d.getFullYear() === now.getFullYear() &&
+            order.status === "Delivered"
+          );
+        }).length;
+
+        monthlyTotalOrders.push(total);
+        monthlyDeliveredOrders.push(delivered);
+      }
+
+      const salesData = {
+        labels: monthLabels,
+        datasets: [
+          {
+            label: "Total Orders",
+            data: monthlyTotalOrders,
+            borderColor: "blue",
+          },
+          {
+            label: "Delivered Orders",
+            data: monthlyDeliveredOrders,
+            borderColor: "green",
+          },
+        ],
+      };
+
+      // ✅ Update state
+      setDashboardData({
+        stats,
+        salesData,
+        orderStatus,
+        recentOrders,
+        allOrders: orders.map((order) => ({
+          id: order._id,
+          items: order.items,
+          amount: order.amount,
+          customer: `${order.address?.firstName || ""} ${
+            order.address?.lastName || ""
+          }`.trim(),
+          paymentMethod: order.paymentMethod,
+          status: order.status,
+          payment: order.payment,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      setError(error.message);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [token]);
+
+  const handleUpdateStatus = async (orderId, update) => {
+    try {
+      await axios.post(
+        backendUrl + "/api/order/status",
+        { orderId, ...update },
+        { headers: { token } }
+      );
+
+      // ✅ Update message based on status
+      if (update.status === "Delivered") {
+        toast.success("Order marked as Delivered & Payment Received");
+      } else {
+        toast.success("Order status updated successfully");
+      }
+
+      // ✅ Refresh dashboard after status update
+      await fetchDashboardData();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  if (loading)
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading Dashboard...</div>
+        Loading Dashboard...
       </div>
     );
-  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -200,25 +246,22 @@ const EAdashSellerDashboard = () => {
       </motion.h1>
 
       {error && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6"
-        >
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
           <strong>Note:</strong> {error}
-        </motion.div>
+        </div>
       )}
 
-      {/* Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {dashboardData.stats.map((stat, idx) => (
           <EAdashStatCard key={idx} {...stat} delay={idx * 0.1} />
         ))}
       </div>
 
-      {/* Charts + Order Details */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <EAdashLineChart salesData={dashboardData.salesData} />
+        <EAdashLineChart
+          labels={dashboardData.salesData.labels}
+          datasets={dashboardData.salesData.datasets}
+        />
         <EAdashPieChart
           title="Order Status"
           labels={dashboardData.orderStatus.labels}
@@ -227,13 +270,10 @@ const EAdashSellerDashboard = () => {
         <EAdashOrderDetails orders={dashboardData.recentOrders} />
       </div>
 
-      {/* Customer Review + Order Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <EAdashCustomerReview />
-        <EAdashPieChart
-          title="Order Status Overview"
-          labels={dashboardData.orderStatus.labels}
-          dataValues={dashboardData.orderStatus.dataValues}
+      <div className="mt-8">
+        <EAdashManageOrders
+          orders={dashboardData.allOrders}
+          onUpdateStatus={handleUpdateStatus}
         />
       </div>
     </div>

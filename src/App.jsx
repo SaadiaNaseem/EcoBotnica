@@ -32,7 +32,7 @@ import { DiseaseProvider } from './context/disease';
 import CommunityComplaints from './pages/CommunityComplaints';
 import ForgotPassword from './compononts/ForgotPassword';
 
-// ADDED FROM SECOND CODE
+// Extra contexts
 import NotificationsPage from "./pages/NotificationsPage";
 import VisualAidPage from './pages/VisualAidPage';
 import { WeatherProvider } from "./context/WeatherContext";
@@ -41,7 +41,12 @@ import { VisualAidProvider } from "./context/VisualAidContext";
 import { MistakeProvider } from "./context/MistakeContext";
 import { NotificationProvider } from "./context/NotificationContext";
 
-// ✅ Normal ProtectedRoute
+// Landing page components
+import LandingPage from "./pages/LandingPage";
+import LandingNavbar from "./compononts/landingPage/Navbar";
+import AboutEcobotanica from "./pages/Aboutecobotnica";
+
+// ✅ ProtectedRoute
 const ProtectedRoute = ({ children, message }) => {
   const { token } = useContext(ShopContext);
   const location = useLocation();
@@ -55,22 +60,36 @@ const ProtectedRoute = ({ children, message }) => {
 // ✅ Special ProtectedRoute for Ecom
 const ProtectedEcomRoute = ({ children }) => {
   const { token } = useContext(ShopContext);
-
-  if (!token) {
-    // agar login nahi hai to ChooseRole pe bhejo
-    return <ChooseRole />;
-  }
+  if (!token) return <ChooseRole />;
   return children;
+};
+
+// ✅ Layout component for Navbar switching
+const Layout = ({ children }) => {
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/";
+
+  return (
+    <>
+      <ToastContainer />
+      {isLandingPage ? <LandingNavbar /> : <Navbar />}
+      {!isLandingPage && <Searchbar />}
+      <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+        {children}
+      </div>
+      <Footer />
+    </>
+  );
 };
 
 const App = () => {
   return (
-    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
-      <ToastContainer />
-      <Navbar />
-      <Searchbar />
+    <Layout>
       <Routes>
-        {/* ✅ Protected Routes with dynamic messages */}
+        {/* 🌿 Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* 🔒 Protected Routes */}
         <Route
           path='/UserDashboard'
           element={
@@ -83,7 +102,6 @@ const App = () => {
           path='/plantCare'
           element={
             <ProtectedRoute message="Please login to access Plant Care Assistant">
-              {/* ADDED FROM SECOND CODE */}
               <ChatbotProvider>
                 <WeatherProvider>
                   <NotificationProvider>
@@ -94,8 +112,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        
-        {/* ADDED FROM SECOND CODE */}
         <Route
           path='/notification'
           element={
@@ -106,15 +122,12 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
-
         <Route
           path='/plantationGuide'
           element={
             <ProtectedRoute message="Please login to access Plantation Guide">
               <AiProvider>
-                {/* ADDED FROM SECOND CODE */}
                 <VisualAidProvider>
                   <MistakeProvider>
                     <PlantationGuide />
@@ -124,8 +137,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
-        {/* ADDED FROM SECOND CODE */}
         <Route
           path="/visual-aid"
           element={
@@ -140,7 +151,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path='/plantDoctor'
           element={
@@ -152,10 +162,9 @@ const App = () => {
           }
         />
 
-        {/* ✅ Public Routes */}
+        {/* 🌿 Public Routes */}
         <Route path="/communityComplaints" element={<CommunityComplaints />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
         <Route path='/PlantProfile' element={<PlantProfile />} />
         <Route path='/addnewplantprofile' element={<AddNewPlantProfile />} />
         <Route path='/collection' element={<Collection />} />
@@ -166,10 +175,11 @@ const App = () => {
         <Route path='/aboutUs' element={<AboutUs />} />
         <Route path='/placeOrder' element={<PlaceOrder />} />
         <Route path='/orders' element={<Orders />} />
-        <Route path='/' element={<PlantIdentification />} />
+<Route path='/plantidentification' element={<PlantIdentification />} />
         <Route path='/companionPlanting' element={<CompanionPlanting />} />
+        <Route path='/AboutEcobotanica' element={<AboutEcobotanica />} />
 
-        {/* ✅ Ecom Special Protected Route */}
+        {/* 🛒 Ecom Protected */}
         <Route
           path='/Ecom'
           element={
@@ -183,8 +193,7 @@ const App = () => {
         <Route path='/verify' element={<VerifyPage />} />
         <Route path='/CommunityChat' element={<CommunityChat />} />
       </Routes>
-      <Footer />
-    </div>
+    </Layout>
   );
 };
 

@@ -1,50 +1,71 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Legend,
+  Tooltip,
+} from "chart.js";
 
-const listVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.4 },
-  }),
-};
+ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Legend, Tooltip);
 
-const EAdashOrderDetails = ({ orders = [] }) => {
-  const hasOrders = orders && orders.length > 0;
+const EAdashLineChart = ({ labels = [], datasets = [] }) => {
+  const data = {
+    labels,
+    datasets: datasets.map(ds => ({
+      label: ds.label,
+      data: ds.data,
+      fill: false,
+      borderColor: ds.borderColor,
+      tension: 0.3,
+      pointBackgroundColor: ds.borderColor,
+      pointBorderColor: ds.borderColor,
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      showLine: true,
+    })),
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+        labels: {
+          usePointStyle: true,   // ✅ Makes legend markers circular
+          pointStyle: "circle",  // ✅ Circle shape instead of rectangle
+          boxWidth: 10,          // size of circle
+          boxHeight: 10,
+          padding: 15,
+          color: "#333",
+          font: {
+            size: 13,
+            weight: "500",
+          },
+        },
+      },
+      tooltip: { mode: "index", intersect: false },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1 },
+      },
+    },
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4">
-      <h3 className="font-semibold text-gray-800 mb-3">Recent Orders</h3>
+    <div className="bg-white p-4 rounded-xl shadow-md">
+      <h3 className="font-semibold text-gray-800 mb-4 text-center text-lg">
+        Order Ratio Throughout The Year
+      </h3>
 
-      {hasOrders ? (
-        <ul className="space-y-3">
-          {orders.map((order, i) => (
-            <motion.li
-              key={order.id || i}
-              custom={i}
-              initial="hidden"
-              animate="visible"
-              variants={listVariants}
-              className="flex justify-between items-start border-b pb-3 text-gray-600"
-            >
-              <div className="flex-1">
-                <p className="font-medium text-sm">{order.text}</p>
-                {order.customer && (
-                  <p className="text-xs text-gray-400 mt-1">Customer: {order.customer}</p>
-                )}
-              </div>
-              <span className="text-sm text-gray-400 ml-2">{order.time}</span>
-            </motion.li>
-          ))}
-        </ul>
-      ) : (
-        <div className="text-gray-400 text-center py-6 italic">
-          No orders yet
-        </div>
-      )}
+      <Line data={data} options={options} />
     </div>
   );
 };
 
-export default EAdashOrderDetails;
+export default EAdashLineChart;

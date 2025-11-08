@@ -11,32 +11,37 @@ const listVariants = {
 };
 
 const EAdashOrderDetails = ({ orders = [] }) => {
-  const hasOrders = orders && orders.length > 0;
+  const hasOrders = orders.length > 0;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4">
-      <h3 className="font-semibold text-gray-800 mb-3">Recent Orders</h3>
+      <h3 className="font-semibold text-gray-800 mb-3">Orders Ratio</h3>
 
       {hasOrders ? (
-        <ul>
-          {orders.map((item, i) => (
+        <ul className="space-y-3">
+          {orders.map((order, i) => (
             <motion.li
-              key={i}
+              key={order.id || i}
               custom={i}
               initial="hidden"
               animate="visible"
               variants={listVariants}
-              className="flex justify-between border-b py-2 text-gray-600"
+              className="flex justify-between items-start border-b pb-3 text-gray-600"
             >
-              <span>{item.text}</span>
-              <span className="text-sm text-gray-400">{item.time}</span>
+              <div className="flex-1">
+                <p className="font-medium text-sm">{order.text}</p>
+                {order.customer && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Customer: {order.customer}
+                  </p>
+                )}
+              </div>
+              <span className="text-sm text-gray-400 ml-2">{order.time}</span>
             </motion.li>
           ))}
         </ul>
       ) : (
-        <div className="text-gray-400 text-center py-6 italic">
-          No orders yet
-        </div>
+        <div className="text-gray-400 text-center py-6 italic">No orders yet</div>
       )}
     </div>
   );

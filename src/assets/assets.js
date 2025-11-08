@@ -28,6 +28,17 @@ import Stripe from './stripe.png';
 import About from './about pic.jpeg';
 import Contact from './contact img.jpeg';
 import PlantGuide from './plant guide.jpg';
+import Dashboard from './dash.jpg';
+import Companion from './augmented-reality-companion-planting-guide.jpg';
+import Community from './comm.jpg';
+import Plantation from './plantation.jpg';
+import LHero from './hero-botanical-bg.jpg';
+import Ecom from './marketplace-ecommerce-store-products-shopping.jpg';
+import Disease from './plant-disease-diagnosis-medical.jpg';
+import Identify from './plant-identification-camera-app.jpg';
+import Care from './smart-assistant-ai-chatbot-care-tips.jpg';
+import Profile from './user-profile-dashboard-interface.jpg';
+
 
 export const assets = {
   plant1,
@@ -59,7 +70,17 @@ export const assets = {
   Stripe,
   About,
   Contact,
-  PlantGuide
+  PlantGuide,
+  Dashboard,
+  Community,
+  Companion,
+  Plantation,
+  LHero,
+  Ecom,
+  Disease,
+  Identify,
+  Care,
+  Profile
 };
 
 export const products = [
