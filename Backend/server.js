@@ -24,6 +24,9 @@ import weatherNotificationRoutes from "./routes/weatherNotificationRoutes.js";
 import Message from "./models/message.js";
 import Report from "./models/report.js";
 
+//UserDashboard
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+
 // App Config
 const app = express();
 const port = process.env.PORT || 4000;
@@ -68,6 +71,8 @@ app.use('/api/reports', reportRoutes);
 app.use("/api/profile", profileRouter);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/weather-notifications", weatherNotificationRoutes);
+app.use("/api/plantcare/dashboard", dashboardRoutes);
+
 
 // Community Chat REST API
 app.get("/api/messages", async (req, res) => {
