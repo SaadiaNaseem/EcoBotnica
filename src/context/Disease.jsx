@@ -19,7 +19,7 @@ export const DiseaseProvider = ({ children }) => {
       const formData = new FormData();
       formData.append("file", imageFile); // Changed from "image" to "file"
 
-      const diagnosisRes = await fetch("https://saira34-ecobotanica-api.hf.space/diagnose", { 
+      const diagnosisRes = await fetch("https://saira34-disease-model.hf.space/diagnose-disease", { 
         method: "POST", 
         body: formData 
       });
@@ -87,7 +87,7 @@ Keep it practical and easy to understand for home gardeners.`;
         },
         {
           headers: {
-            Authorization: "Bearer API_KEY", // Add your key
+            Authorization: "Bearer API KEY", // Add your key
             "Content-Type": "application/json",
           },
         }
