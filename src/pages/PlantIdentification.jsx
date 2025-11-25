@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, Scan, Leaf, Sparkles, Download, Share2, Bookmark, Clock, Zap } from 'lucide-react';
+import { Camera, Upload, Scan, Leaf, Sparkles, Download, Share2, Bookmark, Clock, Zap, Flower, ThermometerSun, Droplets, Sprout } from 'lucide-react';
+import { usePlantIdentification } from '../context/plantIdentification';
 import Title from '../compononts/Title';
 
 const PlantIdentification = () => {
@@ -15,25 +16,128 @@ const PlantIdentification = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
 
+  const { classifyImage, classificationResult, loading, error, clearResults } = usePlantIdentification();
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const navigate = useNavigate();
 
-  // Mock plant data for demonstration
-  const mockPlantData = {
-    plant_name: "Monstera Deliciosa",
-    scientific_name: "Monstera deliciosa",
-    family: "Araceae",
-    confidence: 0.92,
-    description: "Also known as the Swiss Cheese Plant, this tropical beauty is famous for its unique leaf holes and easy-care nature.",
-    care_tips: [
-      "Prefers bright, indirect light",
-      "Water when top soil is dry",
-      "Loves humidity",
-      "Fertilize monthly during growing season"
-    ],
-    fun_fact: "The holes in Monstera leaves are called fenestrations and help the plant withstand heavy rainfall in its natural habitat."
+  // Format AI response with proper styling
+  const formatAIResponse = (text) => {
+    if (!text) return null;
+
+    // Split by sections and create styled components
+    const sections = text.split('**').filter(section => section.trim());
+    
+    return sections.map((section, index) => {
+      if (section.includes(':')) {
+        const [title, ...contentParts] = section.split(':');
+        const content = contentParts.join(':').trim();
+        
+        // Special styling for different sections
+        if (title.trim().includes('🌿 PLANT IDENTIFICATION')) {
+          return (
+            <div key={index} className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Leaf className="w-5 h-5 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-green-800">Plant Identification</h3>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-green-200">
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {content}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        if (title.trim().includes('📊 BASIC CHARACTERISTICS')) {
+          return (
+            <div key={index} className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Flower className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-800">Basic Characteristics</h3>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-blue-200">
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {content}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        if (title.trim().includes('🌍 GROWING CONDITIONS')) {
+          return (
+            <div key={index} className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <ThermometerSun className="w-5 h-5 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-800">Growing Conditions</h3>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-amber-200">
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {content}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        if (title.trim().includes('💧 CARE & MAINTENANCE')) {
+          return (
+            <div key={index} className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-cyan-100 rounded-lg">
+                  <Droplets className="w-5 h-5 text-cyan-600" />
+                </div>
+                <h3 className="text-xl font-bold text-cyan-800">Care & Maintenance</h3>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-cyan-200">
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {content}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        if (title.trim().includes('⚠️ TOXICITY ASSESSMENT')) {
+          return (
+            <div key={index} className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Sprout className="w-5 h-5 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-red-800">Toxicity Assessment</h3>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-red-200">
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {content}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // Default section styling
+        return (
+          <div key={index} className="mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">{title.trim()}</h4>
+            <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50 rounded-lg p-3">
+              {content}
+            </div>
+          </div>
+        );
+      }
+      return null;
+    });
   };
 
   // Camera Functions
@@ -41,6 +145,7 @@ const PlantIdentification = () => {
     setIsCameraOpen(true);
     setCapturedPhoto(null);
     setShowDetails(false);
+    clearResults();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       videoRef.current.srcObject = stream;
@@ -81,6 +186,7 @@ const PlantIdentification = () => {
     setSelectedImage(capturedPhoto);
     setCapturedPhoto(null);
     setShowDetails(false);
+    clearResults();
   };
 
   const handleImageUpload = (e) => {
@@ -88,34 +194,131 @@ const PlantIdentification = () => {
     if (file) {
       setSelectedImage(URL.createObjectURL(file));
       setShowDetails(false);
+      clearResults();
     }
   };
 
-  const simulateScanProcess = () => {
-    setIsScanning(true);
-    setScanProgress(0);
-    
-    const interval = setInterval(() => {
-      setScanProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsScanning(false);
-          setPlantInfo(mockPlantData);
-          setShowDetails(true);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
+  // Convert data URL to File object for API
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
   };
 
-  const handleStartScan = () => {
+  // Real scan process
+  const handleStartScan = async () => {
     if (!selectedImage) {
       alert('Please upload or capture an image first.');
       return;
     }
-    simulateScanProcess();
+
+    setIsScanning(true);
+    setScanProgress(0);
+    setShowDetails(false);
+    clearResults();
+
+    try {
+      const progressInterval = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      let imageFile;
+      if (selectedImage.startsWith('data:image')) {
+        imageFile = dataURLtoFile(selectedImage, 'plant-photo.jpg');
+      } else {
+        const response = await fetch(selectedImage);
+        const blob = await response.blob();
+        imageFile = new File([blob], 'plant-photo.jpg', { type: blob.type });
+      }
+
+      const result = await classifyImage(imageFile);
+      
+      clearInterval(progressInterval);
+      setScanProgress(100);
+
+      if (result.success) {
+        const formattedResult = {
+          plant_name: result.modelUsed === 'plant' ? 'Identified Plant' : 'Identified Flower',
+          scientific_name: "AI Analysis Complete",
+          family: result.modelUsed === 'plant' ? 'Plant Species' : 'Flower Family',
+          confidence: result.confidence / 100,
+          description: result.message,
+          care_tips: [
+            "Based on comprehensive AI analysis",
+            "Follow the detailed care instructions above",
+            "Monitor plant health regularly"
+          ],
+          fun_fact: `This identification was powered by our ${result.modelUsed} model and enhanced with AI analysis!`,
+          modelUsed: result.modelUsed,
+          detailedReport: result.detailedReport
+        };
+        
+        setPlantInfo(formattedResult);
+        setShowDetails(true);
+        
+        setTimeout(() => {
+          const resultsElement = document.getElementById('plant-results');
+          if (resultsElement) {
+            resultsElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 500);
+      } else {
+        alert(`Identification failed: ${result.message}`);
+      }
+
+    } catch (err) {
+      console.error('Scan error:', err);
+      alert('Identification failed. Please try again.');
+    } finally {
+      setIsScanning(false);
+    }
   };
+
+  // Update useEffect to handle context loading state
+  useEffect(() => {
+    if (loading) {
+      setIsScanning(true);
+    } else {
+      setIsScanning(false);
+    }
+  }, [loading]);
+
+  // Handle context results when they change
+  useEffect(() => {
+    if (classificationResult && classificationResult.success) {
+      const formattedResult = {
+        plant_name: classificationResult.modelUsed === 'plant' ? 'Identified Plant' : 'Identified Flower',
+        scientific_name: "AI Analysis Complete",
+        family: classificationResult.modelUsed === 'plant' ? 'Plant Species' : 'Flower Family',
+        confidence: classificationResult.confidence / 100,
+        description: classificationResult.message,
+        care_tips: [
+          "Based on comprehensive AI analysis",
+          "Follow the detailed care instructions above",
+          "Monitor plant health regularly"
+        ],
+        fun_fact: `This identification was powered by our ${classificationResult.modelUsed} model and enhanced with AI analysis!`,
+        modelUsed: classificationResult.modelUsed,
+        detailedReport: classificationResult.detailedReport
+      };
+      
+      setPlantInfo(formattedResult);
+      setShowDetails(true);
+      setScanProgress(100);
+    }
+  }, [classificationResult]);
 
   // Disease Detection Flow
   const handleDetectionClick = () => {
@@ -143,8 +346,8 @@ const PlantIdentification = () => {
   };
 
   return (
-   <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
-    {/* Header Section */}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
+      {/* Header Section */}
       <div className="text-center mb-12">
         <div className="flex justify-center items-center gap-3 mb-4">
           <div className="p-3 bg-green-100 rounded-full">
@@ -155,6 +358,37 @@ const PlantIdentification = () => {
         <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
           Identify any plant instantly using AI technology. Simply upload a photo or use your camera to discover plant species, care tips, and more.
         </p>
+        
+        {/* API Status Indicator */}
+        {error && (
+          <div className="mt-4 max-w-2xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-red-700 font-medium">Identification Error</p>
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {classificationResult && !error && (
+          <div className="mt-4 max-w-2xl mx-auto">
+            <div className={`${
+              classificationResult.modelUsed === 'plant' 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-pink-50 border-pink-200'
+            } border rounded-xl p-4 animate-pulse`}>
+              <p className={`${
+                classificationResult.modelUsed === 'plant' ? 'text-green-700' : 'text-pink-700'
+              } font-medium flex items-center justify-center gap-2`}>
+                {classificationResult.modelUsed === 'plant' ? '🌿 Plant' : '🌸 Flower'} Identified!
+              </p>
+              <p className={`${
+                classificationResult.modelUsed === 'plant' ? 'text-green-600' : 'text-pink-600'
+              } text-sm`}>
+                Confidence: {classificationResult.confidence}% • Model: {classificationResult.modelUsed}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4">
@@ -212,13 +446,13 @@ const PlantIdentification = () => {
 
             {/* Plant Information */}
             {showDetails && plantInfo && (
-              <div className="bg-white rounded-2xl p-8 shadow-lg border border-green-100">
+              <div id="plant-results" className="bg-white rounded-2xl p-8 shadow-lg border border-green-100 animate-fade-in">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-gray-800">{plantInfo.plant_name}</h3>
                   <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
                     <Sparkles className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium text-green-700">
-                      {(plantInfo.confidence * 100).toFixed(0)}% Match
+                      {plantInfo.confidence * 100}% Match
                     </span>
                   </div>
                 </div>
@@ -230,30 +464,37 @@ const PlantIdentification = () => {
                       <p className="font-medium text-gray-800">{plantInfo.scientific_name}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm text-gray-500">Family</p>
-                      <p className="font-medium text-gray-800">{plantInfo.family}</p>
+                      <p className="text-sm text-gray-500">Type</p>
+                      <p className="font-medium text-gray-800 capitalize">{plantInfo.modelUsed}</p>
                     </div>
                   </div>
 
-                  <div>
-                    <p className="text-gray-600 leading-relaxed">{plantInfo.description}</p>
+                  {/* Detailed AI Analysis */}
+                  <div className="space-y-6">
+                    {formatAIResponse(plantInfo.detailedReport || plantInfo.description)}
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">Care Tips</h4>
+                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-purple-500" />
+                      Key Insights
+                    </h4>
                     <div className="space-y-2">
                       {plantInfo.care_tips.map((tip, index) => (
                         <div key={index} className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                           <span className="text-gray-600 text-sm">{tip}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <h4 className="font-semibold text-blue-800 mb-1">Did You Know?</h4>
-                    <p className="text-blue-700 text-sm">{plantInfo.fun_fact}</p>
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                    <h4 className="font-semibold text-green-800 mb-1 flex items-center gap-2">
+                      <Leaf className="w-4 h-4" />
+                      Technology Used
+                    </h4>
+                    <p className="text-green-700 text-sm">{plantInfo.fun_fact}</p>
                   </div>
 
                   <div className="flex gap-3 pt-4">
@@ -353,22 +594,28 @@ const PlantIdentification = () => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-center gap-3">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                        <span className="text-gray-700 font-medium">Analyzing plant features...</span>
+                        <span className="text-gray-700 font-medium">
+                          {loading ? 'Analyzing with AI...' : 'Processing image...'}
+                        </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${scanProgress}%` }}
                         ></div>
                       </div>
-                      <p className="text-sm text-gray-500">{scanProgress}% complete</p>
+                      <p className="text-sm text-gray-500">
+                        {scanProgress < 50 && 'Identifying plant/flower...'}
+                        {scanProgress >= 50 && scanProgress < 90 && 'Getting detailed analysis...'}
+                        {scanProgress >= 90 && 'Finalizing report...'}
+                      </p>
                     </div>
                   )}
 
                   <button
                     onClick={handleStartScan}
                     disabled={!selectedImage || isScanning}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-8 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-8 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 transform hover:scale-105"
                   >
                     <Scan className="w-5 h-5" />
                     {isScanning ? 'Scanning...' : 'Start Plant Identification'}
@@ -380,23 +627,23 @@ const PlantIdentification = () => {
 
             {/* Features Grid */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-green-50">
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-green-50 hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
                   <Clock className="w-5 h-5 text-blue-600" />
                 </div>
-                <p className="text-xs text-gray-600">Instant Results</p>
+                <p className="text-xs text-gray-600">Smart Analysis</p>
               </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-green-50">
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-green-50 hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
                   <Leaf className="w-5 h-5 text-green-600" />
                 </div>
-                <p className="text-xs text-gray-600">10,000+ Species</p>
+                <p className="text-xs text-gray-600">Auto-Detect</p>
               </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-green-50">
+              <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-green-50 hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
                   <Download className="w-5 h-5 text-purple-600" />
                 </div>
-                <p className="text-xs text-gray-600">Save Results</p>
+                <p className="text-xs text-gray-600">AI Reports</p>
               </div>
             </div>
           </div>

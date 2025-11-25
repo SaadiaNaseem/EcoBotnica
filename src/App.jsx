@@ -31,6 +31,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { DiseaseProvider } from './context/disease';
 import CommunityComplaints from './pages/CommunityComplaints';
 import ForgotPassword from './compononts/ForgotPassword';
+import { PlantIdentificationProvider } from './context/plantIdentification';
 
 // Extra contexts
 import NotificationsPage from "./pages/NotificationsPage";
@@ -84,116 +85,127 @@ const Layout = ({ children }) => {
 
 const App = () => {
   return (
-    <Layout>
-      <Routes>
-        {/* 🌿 Landing Page */}
-        <Route path="/" element={<LandingPage />} />
+    <PlantIdentificationProvider>
+      <Layout>
+        <Routes>
+          {/* 🌿 Landing Page */}
+          <Route path="/" element={<LandingPage />} />
 
-        {/* 🔒 Protected Routes */}
-        <Route
-          path='/UserDashboard'
-          element={
-            <ProtectedRoute message="Please login to access your Dashboard">
-              <UserDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path='/plantCare'
-          element={
-            <ProtectedRoute message="Please login to access Plant Care Assistant">
-              <ChatbotProvider>
-                <WeatherProvider>
-                  <NotificationProvider>
-                    <PlantCare />
-                  </NotificationProvider>
-                </WeatherProvider>
-              </ChatbotProvider>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path='/notification'
-          element={
-            <ProtectedRoute message="Please login to access notifications">
-              <NotificationProvider>
-                <NotificationsPage />
-              </NotificationProvider>
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
-        <Route
-          path='/plantationGuide'
-          element={
-            <ProtectedRoute message="Please login to access Plantation Guide">
-              <AiProvider>
-                <VisualAidProvider>
-                  <MistakeProvider>
-                    <PlantationGuide />
-                  </MistakeProvider>
-                </VisualAidProvider>
-              </AiProvider>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/visual-aid"
-          element={
-            <ProtectedRoute message="Please login to access Visual Aids">
-              <AiProvider>
-                <VisualAidProvider>
-                  <MistakeProvider>
-                    <VisualAidPage />
-                  </MistakeProvider>
-                </VisualAidProvider>
-              </AiProvider>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path='/plantDoctor'
-          element={
-            <ProtectedRoute message="Please login to access Plant Doctor">
-              <DiseaseProvider>
-                <PlantDoctor />
-              </DiseaseProvider>
-            </ProtectedRoute>
-          }
-        />
+          {/* 🔒 Protected Routes */}
+          <Route
+            path='/UserDashboard'
+            element={
+              <ProtectedRoute message="Please login to access your Dashboard">
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/plantCare'
+            element={
+              <ProtectedRoute message="Please login to access Plant Care Assistant">
+                <ChatbotProvider>
+                  <WeatherProvider>
+                    <NotificationProvider>
+                      <PlantCare />
+                    </NotificationProvider>
+                  </WeatherProvider>
+                </ChatbotProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/notification'
+            element={
+              <ProtectedRoute message="Please login to access notifications">
+                <NotificationProvider>
+                  <NotificationsPage />
+                </NotificationProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/AdminDashboard" element={<AdminDashboard />} />
+          <Route
+            path='/plantationGuide'
+            element={
+              <ProtectedRoute message="Please login to access Plantation Guide">
+                <AiProvider>
+                  <VisualAidProvider>
+                    <MistakeProvider>
+                      <PlantationGuide />
+                    </MistakeProvider>
+                  </VisualAidProvider>
+                </AiProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/visual-aid"
+            element={
+              <ProtectedRoute message="Please login to access Visual Aids">
+                <AiProvider>
+                  <VisualAidProvider>
+                    <MistakeProvider>
+                      <VisualAidPage />
+                    </MistakeProvider>
+                  </VisualAidProvider>
+                </AiProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/plantDoctor'
+            element={
+              <ProtectedRoute message="Please login to access Plant Doctor">
+                <DiseaseProvider>
+                  <PlantDoctor />
+                </DiseaseProvider>
+              </ProtectedRoute>
+            }
+          />
 
-        {/* 🌿 Public Routes */}
-        <Route path="/communityComplaints" element={<CommunityComplaints />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path='/PlantProfile' element={<PlantProfile />} />
-        <Route path='/addnewplantprofile' element={<AddNewPlantProfile />} />
-        <Route path='/collection' element={<Collection />} />
-        <Route path='/contacts' element={<Contacts />} />
-        <Route path='/product/:productId' element={<Product />} />
-        <Route path='/cart' element={<Cart />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/aboutUs' element={<AboutUs />} />
-        <Route path='/placeOrder' element={<PlaceOrder />} />
-        <Route path='/orders' element={<Orders />} />
-<Route path='/plantidentification' element={<PlantIdentification />} />
-        <Route path='/companionPlanting' element={<CompanionPlanting />} />
-        <Route path='/AboutEcobotanica' element={<AboutEcobotanica />} />
+          {/* 🌿 Plant Identification Route */}
+          <Route 
+            path='/plantidentification' 
+            element={
+              <ProtectedRoute message="Please login to access Plant Identification">
+                <PlantIdentification />
+              </ProtectedRoute>
+            } 
+          />
 
-        {/* 🛒 Ecom Protected */}
-        <Route
-          path='/Ecom'
-          element={
-            <ProtectedEcomRoute>
-              <Ecom />
-            </ProtectedEcomRoute>
-          }
-        />
+          {/* 🌿 Public Routes */}
+          <Route path="/communityComplaints" element={<CommunityComplaints />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path='/PlantProfile' element={<PlantProfile />} />
+          <Route path='/addnewplantprofile' element={<AddNewPlantProfile />} />
+          <Route path='/collection' element={<Collection />} />
+          <Route path='/contacts' element={<Contacts />} />
+          <Route path='/product/:productId' element={<Product />} />
+          <Route path='/cart' element={<Cart />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/aboutUs' element={<AboutUs />} />
+          <Route path='/placeOrder' element={<PlaceOrder />} />
+          <Route path='/orders' element={<Orders />} />
+          <Route path='/companionPlanting' element={<CompanionPlanting />} />
+          <Route path='/AboutEcobotanica' element={<AboutEcobotanica />} />
 
-        <Route path='/profilePage' element={<ProfilePage />} />
-        <Route path='/verify' element={<VerifyPage />} />
-        <Route path='/CommunityChat' element={<CommunityChat />} />
-      </Routes>
-    </Layout>
+          {/* 🛒 Ecom Protected */}
+          <Route
+            path='/Ecom'
+            element={
+              <ProtectedEcomRoute>
+                <Ecom />
+              </ProtectedEcomRoute>
+            }
+          />
+
+          <Route path='/profilePage' element={<ProfilePage />} />
+          <Route path='/verify' element={<VerifyPage />} />
+          <Route path='/CommunityChat' element={<CommunityChat />} />
+        </Routes>
+      </Layout>
+    </PlantIdentificationProvider>
   );
 };
 

@@ -1,6 +1,0 @@
-torch
-torchvision
-flask
-flask-cors
-Pillow
-efficientnet-pytorch

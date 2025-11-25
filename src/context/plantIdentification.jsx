@@ -7,236 +7,291 @@ export const PlantIdentification = createContext();
 export const PlantIdentificationProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [classificationResult, setClassificationResult] = useState(null);
-  const [plantInfo, setPlantInfo] = useState(null);
   const [error, setError] = useState("");
 
-  // Function to classify image (plant, flower, or random)
+  // MAIN SMART CLASSIFICATION FUNCTION
   const classifyImage = async (imageFile) => {
     setLoading(true);
     setError("");
     setClassificationResult(null);
-    setPlantInfo(null);
 
     try {
       const formData = new FormData();
-      formData.append("image", imageFile);
+      formData.append("file", imageFile);
 
-      // First, classify the image type
-      const classificationRes = await fetch("http://127.0.0.1:5000/classify-image", {
-        method: "POST",
-        body: formData,
+      console.log("🌿 Starting smart classification...");
+
+      // Run BOTH models simultaneously
+      const [plantResult, flowerResult] = await Promise.allSettled([
+        // Try Plant Identification
+        fetch("https://saira34-ecobotanica-api.hf.space/identify-plant", {
+          method: "POST",
+          body: formData,
+        }).then(res => res.json()),
+        
+        // Try Flower Classification  
+        fetch("https://saira34-ecobotanica-api.hf.space/identify-flower", {
+          method: "POST",
+          body: formData,
+        }).then(res => res.json())
+      ]);
+
+      console.log("Plant Result:", plantResult);
+      console.log("Flower Result:", flowerResult);
+
+      // Process results
+      let bestResult = null;
+      let modelType = "unknown";
+
+      // Check if plant model succeeded and has good confidence
+      if (plantResult.status === 'fulfilled' && plantResult.value.success) {
+        if (plantResult.value.confidence > 60) {
+          bestResult = {
+            type: "plant",
+            data: plantResult.value,
+            confidence: plantResult.value.confidence
+          };
+          modelType = "plant";
+        }
+      }
+
+      // Check if flower model succeeded and has good confidence
+      if (flowerResult.status === 'fulfilled' && flowerResult.value.success) {
+        if (flowerResult.value.confidence > 60) {
+          // If we already have a plant result, choose the one with higher confidence
+          if (!bestResult || flowerResult.value.confidence > bestResult.confidence) {
+            bestResult = {
+              type: "flower", 
+              data: flowerResult.value,
+              confidence: flowerResult.value.confidence
+            };
+            modelType = "flower";
+          }
+        }
+      }
+
+      // If we found a good result, get detailed analysis from OpenRouter
+      if (bestResult) {
+        console.log("🌿 Getting detailed analysis from AI...");
+        
+        const detailedAnalysis = await getDetailedAnalysis(bestResult);
+        
+        setClassificationResult({
+          success: true,
+          message: detailedAnalysis,
+          rawData: bestResult.data,
+          modelUsed: modelType,
+          confidence: bestResult.confidence,
+          detailedReport: detailedAnalysis
+        });
+
+        return { 
+          success: true, 
+          message: detailedAnalysis,
+          modelUsed: modelType,
+          confidence: bestResult.confidence,
+          detailedReport: detailedAnalysis
+        };
+      }
+
+      // If no good results from either model
+      const fallbackMessage = `🔍 I'm not very confident about this image. \n\nThis could be:\n• A plant or flower not in my database\n• A low-quality or unclear image\n• Multiple plants in one photo\n\nTry uploading a clearer image of a single plant or flower!`;
+      
+      setClassificationResult({
+        success: false,
+        message: fallbackMessage,
+        modelUsed: "none"
       });
 
-      if (!classificationRes.ok) {
-        throw new Error("Failed to classify image");
-      }
-
-      const classificationData = await classificationRes.json();
-      console.log("Classification API Response:", classificationData);
-
-      setClassificationResult(classificationData);
-
-      // If it's a plant or flower, get detailed information
-      if (classificationData.type === "plant" || classificationData.type === "flower") {
-        await getPlantInformation(imageFile, classificationData.type);
-      }
-
-      return classificationData;
+      return { 
+        success: false, 
+        message: fallbackMessage 
+      };
 
     } catch (err) {
-      console.error("Error in classifyImage:", err);
-      const errorMsg = "❌ Error classifying image. Please try again.";
+      console.error("❌ Classification Error:", err);
+      
+      const errorMsg = "🌿 Connection error. Please check your internet and try again.";
       setError(errorMsg);
-      return { type: "error", message: errorMsg };
+
+      return { 
+        success: false, 
+        message: errorMsg 
+      };
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to get plant/flower information
-  const getPlantInformation = async (imageFile, type) => {
+  // Get detailed analysis from OpenRouter AI
+  const getDetailedAnalysis = async (bestResult) => {
     try {
-      const formData = new FormData();
-      formData.append("image", imageFile);
+      const { type, data } = bestResult;
+      
+      let identification = "";
+      let additionalInfo = "";
 
-      // Use different endpoints based on image type
-      const endpoint = type === "plant" 
-        ? "http://127.0.0.1:5001/identify-plant"  // Plant model
-        : "http://127.0.0.1:5002/identify-flower"; // Flower model
-
-      const identificationRes = await fetch(endpoint, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!identificationRes.ok) {
-        throw new Error(`Failed to identify ${type}`);
+      // SAFELY extract identification information
+      if (type === "plant") {
+        identification = `Plant: ${data.plant_type || "Unknown Plant"}`;
+        additionalInfo = `Confidence: ${data.confidence}%`;
+      } else if (type === "flower") {
+        identification = `Flower: ${data.prediction ? data.prediction.replace(/_/g, ' ').toUpperCase() : "Unknown Flower"}`;
+        additionalInfo = `Confidence: ${data.confidence}%`;
+      } else {
+        identification = "Unknown Plant/Flower";
+        additionalInfo = "Confidence: Unknown";
       }
 
-      const identificationData = await identificationRes.json();
-      console.log(`${type} Identification Response:`, identificationData);
+      console.log("🌿 Sending to OpenRouter:", { identification, additionalInfo });
 
-      // Get additional information using AI
-      const plantDetails = await getPlantDetailsFromAI(identificationData.plant_name, type);
-      setPlantInfo({
-        ...identificationData,
-        ...plantDetails,
-        type: type
-      });
+      const fullPrompt = `You are a professional botanist and plant care expert. Provide a COMPREHENSIVE analysis of the following plant/flower:
 
-      return identificationData;
+**IDENTIFIED PLANT/FLOWER:**
+${identification}
+${additionalInfo}
 
-    } catch (err) {
-      console.error(`Error in getPlantInformation for ${type}:`, err);
-      throw err;
-    }
-  };
+Please generate a DETAILED REPORT with the following sections:
 
-  // Function to get detailed plant information from AI
-  const getPlantDetailsFromAI = async (plantName, type) => {
-    try {
-      const fullPrompt = `You are a plant expert. Provide detailed information about this ${type}: "${plantName}".
+**🌿 PLANT IDENTIFICATION:**
+- Common Name & Scientific Name
+- Family & Genus
+- Plant Type (Annual/Perennial/Shrub/Tree/etc.)
 
-Please provide information in the following format:
+**📊 BASIC CHARACTERISTICS:**
+- Growth Habit & Size
+- Leaf Structure & Color
+- Flower Characteristics (if applicable)
+- Special Features
 
-Plant Name: [Common name]
-Scientific Name: [Scientific name if available]
-Family: [Plant family]
-Description: [Brief description of the plant]
-Care Tips:
-- [Tip 1]
-- [Tip 2]
-- [Tip 3]
-- [Tip 4]
-Fun Fact: [Interesting fact about the plant]
+**🌍 GROWING CONDITIONS:**
+- **Optimal Growing Seasons:** (Specific months/seasons)
+- **Climate Requirements:** (Tropical/Temperate/Desert/etc.)
+- **Hardiness Zones:** (If known)
 
-If the plant name is not valid or recognizable, respond with: "Unable to identify this plant."
+**🏡 ENVIRONMENT SUITABILITY:**
+- **Indoor/Outdoor:** Clear recommendation with reasoning
+- **Light Requirements:** (Full sun/Partial shade/Shade)
+- **Space Requirements:** (Container size/Garden space)
 
-Keep the information accurate, helpful, and easy to understand for plant enthusiasts.`;
+**⚠️ TOXICITY ASSESSMENT:**
+- **Toxicity Level:** (Non-toxic/Mildly toxic/Highly toxic)
+- **Toxic Parts:** (Leaves/Stems/Flowers/Fruits/etc.)
+- **Effects on Humans/Pets:** (Specific symptoms if toxic)
+- **Safety Precautions:** (Handling & placement advice)
+
+**💧 CARE & MAINTENANCE:**
+- **Watering Schedule:** (Detailed frequency & amount)
+- **Soil Type:** (Specific soil requirements)
+- **Fertilization:** (Type & schedule)
+- **Pruning Needs:** (When & how to prune)
+
+**🌱 PROPAGATION METHODS:**
+- Best propagation techniques
+- Ideal timing for propagation
+
+**🍃 COMMON USES:**
+- Culinary uses (if any)
+- Medicinal properties (if any)
+- Ornamental value
+- Environmental benefits
+
+**🚨 SPECIAL CONSIDERATIONS:**
+- Common pests & diseases
+- Seasonal care changes
+- Troubleshooting common problems
+
+**📝 EXPERT RECOMMENDATIONS:**
+- Best for beginners/experienced gardeners?
+- Overall difficulty level
+- Key success factors
+
+Please provide accurate, practical information that would help both beginner and experienced gardeners. Format the response in clear sections with emojis for better readability.`;
 
       const aiRes = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
           model: "openai/gpt-3.5-turbo",
           messages: [{ role: "user", content: fullPrompt }],
-          max_tokens: 500,
+          max_tokens: 2000,
         },
         {
           headers: {
-            Authorization: "Bearer YOUR_API_KEY_HERE", // Replace with your actual API key
+            Authorization: "Bearer API_KEY", // ADD YOUR API KEY
             "Content-Type": "application/json",
           },
         }
       );
 
       const aiResponse = aiRes.data.choices[0].message.content;
+      console.log("🌿 AI Detailed Analysis:", aiResponse);
       
-      // Parse the AI response into structured data
-      return parseAIResponse(aiResponse);
+      return aiResponse;
 
-    } catch (err) {
-      console.error("Error getting plant details from AI:", err);
-      return getDefaultPlantInfo(plantName, type);
-    }
-  };
+    } catch (error) {
+      console.error("❌ OpenRouter API Error:", error);
+      
+      // SAFE fallback - don't try to access undefined properties
+      let fallbackMessage = "";
+      
+      if (bestResult.type === "plant") {
+        const plantType = bestResult.data.plant_type || "Unknown Plant";
+        fallbackMessage = `
+🌿 **PLANT IDENTIFIED!**
 
-  // Helper function to parse AI response
-  const parseAIResponse = (response) => {
-    if (response.includes("Unable to identify")) {
-      return getDefaultPlantInfo("Unknown Plant", "plant");
-    }
+**Plant:** ${plantType}
+**Confidence:** ${bestResult.data.confidence || "Unknown"}%
 
-    const lines = response.split('\n');
-    const result = {
-      plant_name: "",
-      scientific_name: "",
-      family: "",
-      description: "",
-      care_tips: [],
-      fun_fact: ""
-    };
+**Status:** Plant identification successful!
 
-    let currentSection = "";
-    
-    lines.forEach(line => {
-      line = line.trim();
-      if (line.startsWith('Plant Name:')) {
-        result.plant_name = line.replace('Plant Name:', '').trim();
-      } else if (line.startsWith('Scientific Name:')) {
-        result.scientific_name = line.replace('Scientific Name:', '').trim();
-      } else if (line.startsWith('Family:')) {
-        result.family = line.replace('Family:', '').trim();
-      } else if (line.startsWith('Description:')) {
-        result.description = line.replace('Description:', '').trim();
-        currentSection = 'description';
-      } else if (line.startsWith('Care Tips:')) {
-        currentSection = 'care_tips';
-      } else if (line.startsWith('Fun Fact:')) {
-        result.fun_fact = line.replace('Fun Fact:', '').trim();
-      } else if (line.startsWith('- ') && currentSection === 'care_tips') {
-        result.care_tips.push(line.replace('- ', '').trim());
-      } else if (currentSection === 'description' && line && !line.startsWith('Care Tips:')) {
-        result.description += ' ' + line;
+*Note: Detailed AI analysis unavailable. Please try again later.*
+        `.trim();
+      } else if (bestResult.type === "flower") {
+        const flowerType = bestResult.data.prediction ? bestResult.data.prediction.replace(/_/g, ' ').toUpperCase() : "Unknown Flower";
+        fallbackMessage = `
+🌸 **FLOWER IDENTIFIED!**
+
+**Flower:** ${flowerType}
+**Confidence:** ${bestResult.data.confidence || "Unknown"}%
+
+**Status:** Flower identification successful!
+
+*Note: Detailed AI analysis unavailable. Please try again later.*
+        `.trim();
+      } else {
+        fallbackMessage = "Identification completed but detailed analysis failed. Please try again.";
       }
-    });
-
-    // Ensure we have at least some care tips
-    if (result.care_tips.length === 0) {
-      result.care_tips = [
-        "Provide adequate sunlight",
-        "Water when soil is dry",
-        "Use well-draining soil",
-        "Fertilize during growing season"
-      ];
+      
+      return fallbackMessage;
     }
-
-    return result;
   };
 
-  // Default plant info if AI fails
-  const getDefaultPlantInfo = (plantName, type) => {
-    return {
-      plant_name: plantName,
-      scientific_name: "Unknown",
-      family: "Unknown",
-      description: `This appears to be a ${type}. For specific care instructions, consult a gardening expert or plant identification guide.`,
-      care_tips: [
-        "Provide adequate sunlight based on plant type",
-        "Water according to the plant's specific needs",
-        "Ensure proper soil drainage",
-        "Monitor for pests and diseases"
-      ],
-      fun_fact: `There are thousands of ${type} species worldwide, each with unique characteristics and care requirements.`
-    };
-  };
-
-  // Clear all states
   const clearResults = () => {
     setClassificationResult(null);
-    setPlantInfo(null);
     setError("");
   };
 
   return (
-    <PlantIdentification.Provider value={{
-      classifyImage,
-      classificationResult,
-      plantInfo,
-      loading,
-      error,
-      clearResults,
-      setPlantInfo
-    }}>
+    <PlantIdentification.Provider
+      value={{
+        classifyImage,
+        classificationResult,
+        loading,
+        error,
+        clearResults,
+      }}
+    >
       {children}
     </PlantIdentification.Provider>
   );
 };
 
-// Custom hook for using the context
 export const usePlantIdentification = () => {
   const context = useContext(PlantIdentification);
   if (!context) {
-    throw new Error("usePlantIdentification must be used within a PlantIdentificationProvider");
+    throw new Error(
+      "usePlantIdentification must be used inside PlantIdentificationProvider"
+    );
   }
   return context;
 };

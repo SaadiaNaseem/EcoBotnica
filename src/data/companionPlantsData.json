@@ -1,147 +1,369 @@
 [
   {
     "name": "Tomato",
-    "goodCompanions": ["Basil", "Carrot", "Onion", "Parsley", "Marigold", "Chives", "Garlic", "Asparagus"],
-    "badCompanions": ["Cabbage", "Corn", "Potato", "Fennel", "Broccoli", "Brussels Sprouts"]
+    "goodCompanions": ["Basil", "Carrot", "Onion", "Parsley", "Marigold", "Chives", "Garlic", "Asparagus", "Nasturtium", "Borage"],
+    "badCompanions": ["Cabbage", "Corn", "Potato", "Fennel", "Broccoli", "Brussels Sprouts", "Kale", "Cauliflower"],
+    "benefits": [
+      "Basil repels tomato hornworms and improves flavor",
+      "Marigold deters nematodes and whiteflies",
+      "Garlic prevents fungal diseases",
+      "Asparagus repels tomato root nematodes"
+    ],
+    "warnings": [
+      "Avoid planting with potatoes - both susceptible to blight",
+      "Corn attracts tomato fruit worm",
+      "Brassicas compete for same nutrients"
+    ],
+    "plantingTips": [
+      "Plant basil around tomato base for pest control",
+      "Use marigolds as border plants",
+      "Rotate planting location yearly to prevent soil diseases"
+    ],
+    "category": "Vegetable",
+    "growthType": "Warm Season"
   },
   {
     "name": "Carrot",
-    "goodCompanions": ["Tomato", "Lettuce", "Chives", "Rosemary", "Leek", "Peas", "Sage"],
-    "badCompanions": ["Dill", "Parsnip", "Fennel", "Celery", "Cabbage"]
+    "goodCompanions": ["Tomato", "Lettuce", "Chives", "Rosemary", "Leek", "Peas", "Sage", "Onion", "Radish", "Beans"],
+    "badCompanions": ["Dill", "Parsnip", "Fennel", "Celery", "Cabbage", "Potato"],
+    "benefits": [
+      "Onions and leeks repel carrot fly",
+      "Radish breaks soil for carrot roots",
+      "Tomatoes provide light shade in hot weather",
+      "Rosemary deters carrot rust fly"
+    ],
+    "warnings": [
+      "Dill and carrots cross-pollinate reducing seed quality",
+      "Parsnips attract same pests as carrots",
+      "Avoid heavy feeders that compete for nutrients"
+    ],
+    "plantingTips": [
+      "Interplant with onions every other row",
+      "Sow radish seeds with carrots to mark rows",
+      "Plant in loose, sandy soil for straight roots"
+    ],
+    "category": "Root Vegetable",
+    "growthType": "Cool Season"
   },
   {
     "name": "Cucumber",
-    "goodCompanions": ["Beans", "Corn", "Peas", "Radish", "Sunflower", "Lettuce", "Dill"],
-    "badCompanions": ["Potato", "Aromatic Herbs", "Sage", "Basil", "Melon"]
+    "goodCompanions": ["Beans", "Corn", "Peas", "Radish", "Sunflower", "Lettuce", "Dill", "Nasturtium", "Marigold", "Oregano"],
+    "badCompanions": ["Potato", "Aromatic Herbs", "Sage", "Basil", "Melon", "Strong-scented herbs"],
+    "benefits": [
+      "Corn provides natural trellis for climbing",
+      "Radish deters cucumber beetles",
+      "Marigold repels nematodes and beetles",
+      "Nasturtium acts as trap crop for aphids"
+    ],
+    "warnings": [
+      "Potatoes spread blight to cucumbers",
+      "Strong herbs can affect cucumber flavor",
+      "Melons attract same pests and diseases"
+    ],
+    "plantingTips": [
+      "Train cucumbers up corn stalks",
+      "Plant radish around cucumber perimeter",
+      "Use nasturtium as sacrificial plants"
+    ],
+    "category": "Vine Vegetable",
+    "growthType": "Warm Season"
   },
   {
     "name": "Spinach",
-    "goodCompanions": ["Peas", "Radish", "Strawberry", "Celery", "Onion", "Cabbage", "Cauliflower"],
-    "badCompanions": ["Potato", "Fennel", "Melon", "Corn", "Sunflower"]
+    "goodCompanions": ["Peas", "Radish", "Strawberry", "Celery", "Onion", "Cabbage", "Cauliflower", "Lettuce", "Beans", "Garlic"],
+    "badCompanions": ["Potato", "Fennel", "Melon", "Corn", "Sunflower"],
+    "benefits": [
+      "Peas provide nitrogen for spinach growth",
+      "Strawberries provide ground cover keeping soil cool",
+      "Onions deter leaf miners",
+      "Beans add nitrogen to soil"
+    ],
+    "warnings": [
+      "Potatoes are heavy feeders competing for nutrients",
+      "Tall plants like corn shade spinach too much",
+      "Fennel inhibits spinach growth"
+    ],
+    "plantingTips": [
+      "Plant as quick crop between slower-growing plants",
+      "Use as living mulch under taller plants",
+      "Succession plant every 2-3 weeks"
+    ],
+    "category": "Leafy Green",
+    "growthType": "Cool Season"
   },
   {
     "name": "Potato",
-    "goodCompanions": ["Beans", "Cabbage", "Corn", "Horseradish", "Marigold", "Basil", "Onion"],
-    "badCompanions": ["Tomato", "Cucumber", "Pumpkin", "Sunflower", "Raspberry"]
+    "goodCompanions": ["Beans", "Cabbage", "Corn", "Horseradish", "Marigold", "Basil", "Onion", "Garlic", "Lettuce", "Spinach"],
+    "badCompanions": ["Tomato", "Cucumber", "Pumpkin", "Sunflower", "Raspberry", "Squash", "Apple trees"],
+    "benefits": [
+      "Beans fix nitrogen in soil",
+      "Horseradish deters potato bugs",
+      "Marigold repels nematodes",
+      "Basil improves flavor and growth"
+    ],
+    "warnings": [
+      "Tomatoes spread blight to potatoes",
+      "Cucumbers attract similar pests",
+      "Sunflowers inhibit potato growth"
+    ],
+    "plantingTips": [
+      "Plant horseradish at corners of potato patch",
+      "Use marigold as border plants",
+      "Hill soil around plants as they grow"
+    ],
+    "category": "Root Vegetable",
+    "growthType": "Cool Season"
   },
   {
     "name": "Basil",
-    "goodCompanions": ["Tomato", "Peppers", "Oregano", "Chives", "Marigold", "Asparagus", "Beets"],
-    "badCompanions": ["Rue", "Sage", "Thyme", "Rosemary", "Cucumber"]
+    "goodCompanions": ["Tomato", "Peppers", "Oregano", "Chives", "Marigold", "Asparagus", "Beets", "Lettuce", "Beans", "Potato"],
+    "badCompanions": ["Rue", "Sage", "Thyme", "Rosemary", "Cucumber", "Mint"],
+    "benefits": [
+      "Repels mosquitoes, flies, and tomato hornworms",
+      "Improves tomato flavor and growth",
+      "Attracts pollinators to garden",
+      "Deters aphids and spider mites"
+    ],
+    "warnings": [
+      "Rue inhibits basil growth",
+      "Some herbs compete for same space",
+      "Can become invasive if not contained"
+    ],
+    "plantingTips": [
+      "Plant around tomato plants as living mulch",
+      "Pinch flowers to encourage leaf growth",
+      "Grow in containers to control spread"
+    ],
+    "category": "Herb",
+    "growthType": "Warm Season"
   },
   {
     "name": "Lettuce",
-    "goodCompanions": ["Carrot", "Radish", "Cucumber", "Strawberry", "Beets", "Onion", "Garlic"],
-    "badCompanions": ["Parsley", "Celery", "Sunflower", "Kale"]
+    "goodCompanions": ["Carrot", "Radish", "Cucumber", "Strawberry", "Beets", "Onion", "Garlic", "Spinach", "Beans", "Chives"],
+    "badCompanions": ["Parsley", "Celery", "Sunflower", "Kale", "Cabbage", "Broccoli"],
+    "benefits": [
+      "Grows well in partial shade of taller plants",
+      "Quick-growing filler between slow crops",
+      "Helps suppress weeds as ground cover",
+      "Compatible with most root vegetables"
+    ],
+    "warnings": [
+      "Tall plants can shade lettuce too much",
+      "Heavy feeders compete for nutrients",
+      "Some brassicas inhibit lettuce growth"
+    ],
+    "plantingTips": [
+      "Plant as border around garden beds",
+      "Use as succession crop between seasons",
+      "Harvest outer leaves for continuous growth"
+    ],
+    "category": "Leafy Green",
+    "growthType": "Cool Season"
   },
   {
     "name": "Peas",
-    "goodCompanions": ["Carrot", "Cucumber", "Radish", "Spinach", "Turnip", "Corn", "Lettuce"],
-    "badCompanions": ["Onion", "Garlic", "Leek", "Chives", "Shallots"]
+    "goodCompanions": ["Carrot", "Cucumber", "Radish", "Spinach", "Turnip", "Corn", "Lettuce", "Beans", "Potato", "Mint"],
+    "badCompanions": ["Onion", "Garlic", "Leek", "Chives", "Shallots", "Gladiolus"],
+    "benefits": [
+      "Fixes nitrogen in soil for other plants",
+      "Provides natural trellis for some crops",
+      "Early crop that prepares soil for others",
+      "Attracts beneficial insects"
+    ],
+    "warnings": [
+      "Alliums stunt pea growth",
+      "Avoid planting in same spot year after year",
+      "Some flowers inhibit pea growth"
+    ],
+    "plantingTips": [
+      "Plant early in season as soil warms",
+      "Provide trellis for climbing varieties",
+      "Harvest regularly to encourage production"
+    ],
+    "category": "Legume",
+    "growthType": "Cool Season"
   },
   {
     "name": "Onion",
-    "goodCompanions": ["Carrot", "Beets", "Strawberry", "Lettuce", "Spinach", "Chamomile", "Tomato"],
-    "badCompanions": ["Peas", "Beans", "Asparagus", "Sage"]
+    "goodCompanions": ["Carrot", "Beets", "Strawberry", "Lettuce", "Spinach", "Chamomile", "Tomato", "Cabbage", "Broccoli", "Pepper"],
+    "badCompanions": ["Peas", "Beans", "Asparagus", "Sage", "Parsley"],
+    "benefits": [
+      "Deters many pests with strong scent",
+      "Improves flavor of some companions",
+      "Repels carrot fly and aphids",
+      "Natural antifungal properties"
+    ],
+    "warnings": [
+      "Inhibits legume growth",
+      "Can stunt asparagus growth",
+      "Some herbs don't tolerate onion proximity"
+    ],
+    "plantingTips": [
+      "Interplant throughout garden for pest control",
+      "Plant near roses to deter black spot",
+      "Use as border plant for protection"
+    ],
+    "category": "Bulb Vegetable",
+    "growthType": "Cool Season"
   },
   {
     "name": "Garlic",
-    "goodCompanions": ["Tomato", "Carrot", "Beets", "Lettuce", "Celery", "Chamomile", "Rose"],
-    "badCompanions": ["Beans", "Peas", "Strawberry", "Asparagus"]
+    "goodCompanions": ["Tomato", "Carrot", "Beets", "Lettuce", "Celery", "Chamomile", "Rose", "Fruit Trees", "Cabbage", "Potato"],
+    "badCompanions": ["Beans", "Peas", "Strawberry", "Asparagus", "Parsley"],
+    "benefits": [
+      "Natural fungicide and pesticide",
+      "Repels aphids, Japanese beetles, and root maggots",
+      "Improves tomato and rose health",
+      "Deters deer and rabbits"
+    ],
+    "warnings": [
+      "Inhibits legume growth significantly",
+      "Can affect strawberry production",
+      "Some plants sensitive to garlic compounds"
+    ],
+    "plantingTips": [
+      "Plant around fruit trees for pest control",
+      "Use throughout garden for general protection",
+      "Harvest when lower leaves turn brown"
+    ],
+    "category": "Bulb Vegetable",
+    "growthType": "Cool Season"
   },
   {
     "name": "Beets",
-    "goodCompanions": ["Onion", "Cabbage", "Lettuce", "Radish", "Basil", "Mint"],
-    "badCompanions": ["Pole Beans", "Field Mustard", "Charlock"]
+    "goodCompanions": ["Onion", "Cabbage", "Lettuce", "Radish", "Basil", "Mint", "Garlic", "Beans", "Kohlrabi"],
+    "badCompanions": ["Pole Beans", "Field Mustard", "Charlock", "Mustard"],
+    "benefits": [
+      "Adds minerals to soil",
+      "Compatible with most brassicas",
+      "Grows well with alliums",
+      "Good filler crop between rows"
+    ],
+    "warnings": [
+      "Pole beans may inhibit growth",
+      "Some mustard family plants compete",
+      "Avoid planting with heavy feeders"
+    ],
+    "plantingTips": [
+      "Thin seedlings early for better root development",
+      "Plant in succession for continuous harvest",
+      "Use greens as edible bonus crop"
+    ],
+    "category": "Root Vegetable",
+    "growthType": "Cool Season"
   },
   {
     "name": "Cabbage",
-    "goodCompanions": ["Onion", "Garlic", "Potato", "Celery", "Beets", "Chamomile", "Dill"],
-    "badCompanions": ["Tomato", "Strawberry", "Grapes"]
-  },
-  {
-    "name": "Cauliflower",
-    "goodCompanions": ["Celery", "Dill", "Onion", "Peas", "Spinach", "Nasturtium"],
-    "badCompanions": ["Strawberry", "Tomato", "Grapes"]
-  },
-  {
-    "name": "Broccoli",
-    "goodCompanions": ["Beets", "Celery", "Chamomile", "Potato", "Onion", "Mint"],
-    "badCompanions": ["Tomato", "Strawberry", "Pole Beans"]
-  },
-  {
-    "name": "Corn",
-    "goodCompanions": ["Cucumber", "Peas", "Beans", "Pumpkin", "Melon", "Radish"],
-    "badCompanions": ["Tomato", "Celery", "Brassicas"]
+    "goodCompanions": ["Onion", "Garlic", "Potato", "Celery", "Beets", "Chamomile", "Dill", "Mint", "Rosemary", "Sage"],
+    "badCompanions": ["Tomato", "Strawberry", "Grapes", "Pole Beans", "Mustard"],
+    "benefits": [
+      "Aromatic herbs deter cabbage moths",
+      "Alliums repel root flies",
+      "Celery deters white cabbage butterfly",
+      "Chamomile improves flavor and growth"
+    ],
+    "warnings": [
+      "Tomatoes attract similar pests",
+      "Strawberries may spread diseases",
+      "Some legumes inhibit growth"
+    ],
+    "plantingTips": [
+      "Plant with strong-scented herbs for protection",
+      "Use floating row covers for pest control",
+      "Rotate planting locations yearly"
+    ],
+    "category": "Brassica",
+    "growthType": "Cool Season"
   },
   {
     "name": "Marigold",
-    "goodCompanions": ["Tomato", "Potato", "Basil", "Cabbage", "Melon"],
-    "badCompanions": ["Beans"]
-  },
-  {
-    "name": "Asparagus",
-    "goodCompanions": ["Basil", "Tomato", "Parsley", "Coriander", "Marigold"],
-    "badCompanions": ["Onion", "Garlic"]
-  },
-  {
-    "name": "Parsley",
-    "goodCompanions": ["Tomato", "Asparagus", "Carrot", "Chives"],
-    "badCompanions": ["Lettuce", "Mint"]
-  },
-  {
-    "name": "Mint",
-    "goodCompanions": ["Cabbage", "Broccoli", "Brussels Sprouts", "Tomato"],
-    "badCompanions": ["Parsley", "Chamomile"]
-  },
-  {
-    "name": "Brussels Sprouts",
-    "goodCompanions": ["Onion", "Garlic", "Mint", "Nasturtium"],
-    "badCompanions": ["Tomato", "Strawberry"]
-  },
-  {
-    "name": "Radish",
-    "goodCompanions": ["Spinach", "Lettuce", "Cucumber", "Carrot", "Peas"],
-    "badCompanions": ["Hyssop"]
-  },
-  {
-    "name": "Rosemary",
-    "goodCompanions": ["Carrot", "Sage", "Bean", "Broccoli"],
-    "badCompanions": ["Potato", "Cucumber"]
-  },
-  {
-    "name": "Celery",
-    "goodCompanions": ["Cabbage", "Cauliflower", "Spinach", "Onion", "Garlic"],
-    "badCompanions": ["Corn", "Lettuce"]
+    "goodCompanions": ["Tomato", "Potato", "Basil", "Cabbage", "Melon", "Cucumber", "Pepper", "Squash", "Beans"],
+    "badCompanions": ["Beans"],
+    "benefits": [
+      "Repels nematodes in soil",
+      "Deters whiteflies and other pests",
+      "Attracts beneficial insects",
+      "Natural pesticide when planted throughout garden"
+    ],
+    "warnings": [
+      "Some varieties may inhibit bean growth",
+      "Can self-seed aggressively if not managed"
+    ],
+    "plantingTips": [
+      "Plant as border around entire garden",
+      "Use French marigolds for best pest control",
+      "Deadhead flowers to encourage blooming"
+    ],
+    "category": "Flower",
+    "growthType": "Annual"
   },
   {
     "name": "Strawberry",
-    "goodCompanions": ["Spinach", "Bean", "Thyme", "Borage"],
-    "badCompanions": ["Cabbage", "Broccoli", "Cauliflower"]
+    "goodCompanions": ["Spinach", "Bean", "Thyme", "Borage", "Lettuce", "Onion", "Garlic", "Sage", "Caraway"],
+    "badCompanions": ["Cabbage", "Broccoli", "Cauliflower", "Potato", "Tomato"],
+    "benefits": [
+      "Borage strengthens resistance to pests",
+      "Thyme helps deter worms",
+      "Beans add nitrogen to soil",
+      "Spinach provides ground cover"
+    ],
+    "warnings": [
+      "Brassicas attract same pests and diseases",
+      "Nightshades may spread verticillium wilt",
+      "Some plants compete for space and nutrients"
+    ],
+    "plantingTips": [
+      "Plant borage nearby for improved pollination",
+      "Use straw mulch to keep berries clean",
+      "Renew beds every 3-4 years"
+    ],
+    "category": "Berry",
+    "growthType": "Perennial"
   },
   {
-    "name": "Pumpkin",
-    "goodCompanions": ["Corn", "Beans", "Radish", "Nasturtium"],
-    "badCompanions": ["Potato"]
+    "name": "Rosemary",
+    "goodCompanions": ["Carrot", "Sage", "Bean", "Broccoli", "Cabbage", "Cauliflower", "Lavender", "Thyme"],
+    "badCompanions": ["Potato", "Cucumber", "Basil", "Mint"],
+    "benefits": [
+      "Repels carrot fly and bean beetles",
+      "Improves flavor of some vegetables",
+      "Attracts pollinators",
+      "Deters cabbage moths"
+    ],
+    "warnings": [
+      "Can inhibit some herb growth",
+      "May be too aggressive for some plants",
+      "Prefers different soil than some vegetables"
+    ],
+    "plantingTips": [
+      "Plant as border or in containers",
+      "Prune regularly to maintain shape",
+      "Use cuttings for propagation"
+    ],
+    "category": "Herb",
+    "growthType": "Perennial"
   },
   {
-    "name": "Watermelon",
-    "goodCompanions": ["Corn", "Radish", "Nasturtium"],
-    "badCompanions": ["Potato"]
-  },
-  {
-    "name": "Leek",
-    "goodCompanions": ["Carrot", "Onion", "Celery", "Cabbage"],
-    "badCompanions": ["Peas", "Beans"]
-  },
-  {
-    "name": "Turnip",
-    "goodCompanions": ["Peas", "Onion", "Garlic"],
-    "badCompanions": ["Potato"]
-  },
-  {
-    "name": "Thyme",
-    "goodCompanions": ["Strawberry", "Cabbage"],
-    "badCompanions": ["Basil"]
+    "name": "Mint",
+    "goodCompanions": ["Cabbage", "Broccoli", "Brussels Sprouts", "Tomato", "Peas", "Carrot", "Chamomile"],
+    "badCompanions": ["Parsley", "Chamomile", "Other mints"],
+    "benefits": [
+      "Deters cabbage moths and aphids",
+      "Improves tomato health",
+      "Attracts beneficial insects",
+      "Repels ants and mice"
+    ],
+    "warnings": [
+      "Very invasive - plant in containers",
+      "Can overwhelm other plants",
+      "Some herbs don't grow well with mint"
+    ],
+    "plantingTips": [
+      "Always grow in containers to control spread",
+      "Plant near doors and windows to deter pests",
+      "Harvest regularly to encourage new growth"
+    ],
+    "category": "Herb",
+    "growthType": "Perennial"
   }
 ]

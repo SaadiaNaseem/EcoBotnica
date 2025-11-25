@@ -13,15 +13,15 @@ export const DiseaseProvider = ({ children }) => {
     setLoading(true);
     setError("");
     setResponse(""); // Clear previous response
-    
-    try {
-      // First, send image to your Flask API for disease identification
-      const formData = new FormData();
-      formData.append("image", imageFile);
 
-      const diagnosisRes = await fetch("http://127.0.0.1:5000/diagnose", {
-        method: "POST",
-        body: formData,
+    try {
+      // Send image to your FastAPI backend
+      const formData = new FormData();
+      formData.append("file", imageFile); // Changed from "image" to "file"
+
+      const diagnosisRes = await fetch("https://saira34-ecobotanica-api.hf.space/diagnose", { 
+        method: "POST", 
+        body: formData 
       });
 
       if (!diagnosisRes.ok) {
@@ -31,75 +31,53 @@ export const DiseaseProvider = ({ children }) => {
       const diagnosisData = await diagnosisRes.json();
       console.log("Diagnosis API Response:", diagnosisData);
 
+      // Check if diagnosis was successful
+      if (!diagnosisData.success) {
+        throw new Error(diagnosisData.error || "Diagnosis failed");
+      }
+
       const diseaseName = diagnosisData.diagnosis;
+      const confidence = diagnosisData.confidence;
 
-      // Then, get detailed disease info from AI
-//       const fullPrompt = `You are a plant care assistant. The user will provide a plant name and the system will identify the disease and provide detailed information related to it. ignore the plant name, just based on disease
+      console.log(`Detected: ${diseaseName} with ${confidence}% confidence`);
 
-// If the input is a valid plant disease name, generate detailed disease information in easy words so that a lay man can understand easily using the format below:
+      // If it's a healthy plant, return early
+      if (diagnosisData.is_healthy) {
+        const healthyMessage = `🌱 Healthy Plant Detected! \n\nYour plant appears to be healthy with ${confidence}% confidence. Continue with your current care routine!`;
+        setResponse(healthyMessage);
+        return healthyMessage;
+      }
 
-// Identified Disease:
-//   - Mention the detected disease for the plant (e.g., Leaf Yellowing, Root Rot, etc.).
+      // Get detailed disease info from AI
+      const fullPrompt = `You are a plant care assistant. Provide detailed information about this plant disease in simple terms:
 
-// Severity:
-//   - State the severity of the disease (e.g., Mild, Moderate, Severe).
+Identified Disease: ${diseaseName}
 
-// Cause:
-//   - Explain the potential causes of the disease (e.g., nutrient deficiencies, overwatering, pests, etc.).
+Please provide information in this format:
 
-// Symptoms:
-//   - List common symptoms (e.g., yellowing leaves, weak growth, wilting).
+**Identified Disease:**
+- [Disease name and brief description]
 
-// Treatments:
-//   - Provide specific steps for treatment:
-//     - Watering: Recommended watering practices (e.g., allow soil to dry, avoid overwatering).
-//     - Fertilization: Suggestions on fertilizers or nutrients to apply (e.g., balanced fertilizer, iron supplements).
-//     - Pruning: How to prune affected parts of the plant (e.g., remove yellow leaves).
-//     - Light: Ideal lighting conditions (e.g., bright, indirect sunlight).
-//     - Pest Control: If applicable, suggest treatments for pests (e.g., neem oil for spider mites).
+**Severity:**
+- [Mild/Moderate/Severe]
 
-// Urgency:
-//   - Specify the urgency of treatment (e.g., Low, Moderate, High).
+**Cause:**
+- [Main causes of this disease]
 
-// BUT — if the input is not a valid plant disease name or if it seems like a general question or sentence, reply with:
-// no details found related to this disease.
+**Symptoms:**
+- [Common symptoms to look for]
 
-// Here is the user input: "${diseaseName}"`;
+**Treatment:**
+- **Watering:** [Watering recommendations]
+- **Fertilization:** [Fertilizer suggestions]  
+- **Pruning:** [Pruning instructions]
+- **Light:** [Light requirements]
+- **Pest Control:** [Pest management if needed]
 
+**Urgency:**
+- [Low/Moderate/High urgency for treatment]
 
-
-
-const fullPrompt = `You are a plant care assistant. The user will provide a plant name and the system will identify the disease and provide detailed information related to it.
-
-If the input is a valid plant disease name, generate detailed disease information using the format below:
-
-Identified Disease:
-  - Mention the detected disease for the plant (e.g., Leaf Yellowing, Root Rot, etc.).
-
-Severity:
-  - State the severity of the disease (e.g., Mild, Moderate, Severe).
-
-Cause:
-  - Explain the potential causes of the disease (e.g., nutrient deficiencies, overwatering, pests, etc.).
-
-Symptoms:
-  - List common symptoms (e.g., yellowing leaves, weak growth, wilting).
-
-Treatments:
-  - Provide specific steps for treatment:
-    - Watering: Recommended watering practices (e.g., allow soil to dry, avoid overwatering).
-    - Fertilization: Suggestions on fertilizers or nutrients to apply (e.g., balanced fertilizer, iron supplements).
-    - Pruning: How to prune affected parts of the plant (e.g., remove yellow leaves).
-    - Light: Ideal lighting conditions (e.g., bright, indirect sunlight).
-    - Pest Control: If applicable, suggest treatments for pests (e.g., neem oil for spider mites).
-
-Urgency:
-  - Specify the urgency of treatment (e.g., Low, Moderate, High).
-
-BUT — if the input is not a valid plant disease name or if it seems like a general question or sentence, reply with:
-no details found related to this disease.
-
-Here is the user input: "${diseaseName}"`;
+Keep it practical and easy to understand for home gardeners.`;
 
       const aiRes = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -109,21 +87,21 @@ Here is the user input: "${diseaseName}"`;
         },
         {
           headers: {
-            Authorization: "Bearer API_KEY", // You need to add your actual API key
+            Authorization: "Bearer API_KEY", // Add your key
             "Content-Type": "application/json",
           },
         }
       );
-      
+
       const aiResponse = aiRes.data.choices[0].message.content;
-      setResponse(aiResponse); // Set state with the response
+      setResponse(aiResponse);
       console.log("AI Response:", aiResponse);
-      
+
       return aiResponse;
 
     } catch (err) {
       console.error("Error in diagnoseDisease:", err);
-      const errorMsg = "❌ Error fetching data. Please try again.";
+      const errorMsg = err.message || "❌ Error fetching data. Please try again.";
       setError(errorMsg);
       setResponse(errorMsg);
       return errorMsg;
