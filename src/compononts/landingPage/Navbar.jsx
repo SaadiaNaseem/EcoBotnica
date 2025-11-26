@@ -1,17 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { assets } from "../../assets/assets"; // adjust path if needed
-import { FiLogIn, FiMenu, FiX } from "react-icons/fi"; // Added FiMenu and FiX for toggle
-import { useNavigate } from "react-router-dom"; // Import useNavigate from React Router
+import { assets } from "../../assets/assets";
+import { FiLogIn, FiMenu, FiX } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { ShopContext } from "../../context/ShopContext";
 
 export default function Navbar() {
-  const navigate = useNavigate(); // Initialize navigate function
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State to toggle menu visibility
+  const navigate = useNavigate();
+  const { token } = useContext(ShopContext);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Function to handle button click and navigate to login page
+  // Function to handle button click and navigate
   const handleClick = () => {
-    navigate("/login");  // Navigate to the /login route
+    if (token) {
+      navigate("/UserDashboard");
+    } else {
+      navigate("/login");
+    }
   };
 
   // Function to toggle the menu open and closed
@@ -56,20 +62,20 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Right: Login Icon (visible on medium screens and up) */}
+        {/* Right: Login/Dashboard Icon (visible on medium screens and up) */}
         <motion.button
           whileHover={{ scale: 1.1, color: "#16a34a" }}
           whileTap={{ scale: 0.95 }}
-          onClick={handleClick}  // Call handleClick to navigate to login
+          onClick={handleClick}
           className="hidden md:block text-2xl text-gray-800 hover:text-green-600 transition-colors"
         >
-          <FiLogIn />  {/* Assuming you want to display the login icon */}
+          <FiLogIn />
         </motion.button>
 
         {/* Hamburger Menu Icon (visible on small screens) */}
         <motion.div
           className="md:hidden flex items-center"
-          onClick={toggleMenu}  // Toggle menu visibility
+          onClick={toggleMenu}
         >
           {isMenuOpen ? (
             <FiX className="text-2xl text-gray-800" />
@@ -85,21 +91,24 @@ export default function Navbar() {
           <Link
             to="/"
             className="text-gray-800 hover:text-green-600 transition-colors font-medium"
-            onClick={() => setIsMenuOpen(false)}  // Close menu after link click
+            onClick={() => setIsMenuOpen(false)}
           >
             Home
           </Link>
           <Link
             to="/AboutEcobotanica"
             className="text-gray-800 hover:text-green-600 transition-colors font-medium"
-            onClick={() => setIsMenuOpen(false)}  // Close menu after link click
+            onClick={() => setIsMenuOpen(false)}
           >
             About Us
           </Link>
           <motion.button
             whileHover={{ scale: 1.1, color: "#16a34a" }}
             whileTap={{ scale: 0.95 }}
-            onClick={handleClick}  // Call handleClick to navigate to login
+            onClick={() => {
+              handleClick();
+              setIsMenuOpen(false);
+            }}
             className="text-2xl text-gray-800 hover:text-green-600 transition-colors"
           >
             <FiLogIn />

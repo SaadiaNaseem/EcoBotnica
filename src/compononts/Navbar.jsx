@@ -1,37 +1,134 @@
-import React, { useContext, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import React, { useContext, useState, useEffect } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiMessageCircle, FiShoppingCart, FiUser, FiMenu, FiLogIn } from "react-icons/fi";
 
 const Navbar = () => {
-  const [isEcom, setIsEcom] = useState(false);
   const [visible, setVisible] = useState(false);
-
-  const handleMainNavClick = () => {
-    setIsEcom(false); // Switch back to main navigation
-    setVisible(false);
-  };
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const location = useLocation();
   const { setShowSearch, getCartCount, navigate, token, setToken, setCartItems } = useContext(ShopContext);
-  const [notificationCount] = useState(3);// temp for now make notification count function and replace 
 
+  // Check if current page is Ecom or its subpages
+  const isEcomPage = location.pathname === '/Ecom' || 
+                     location.pathname === '/collection' || 
+                     location.pathname === '/aboutUs' || 
+                     location.pathname === '/contacts';
+
+  // Check if current page is notification page
+  const isNotificationPage = location.pathname === '/notification';
+
+  // Simulate new notifications (replace with actual API call)
+  useEffect(() => {
+    if (token) {
+      // Simulate checking for new notifications
+      const checkNewNotifications = () => {
+        // Replace this with actual API call to check for new notifications
+        const hasNew = Math.random() > 0.5; // 50% chance of new notifications
+        setHasNewNotifications(hasNew);
+      };
+
+      checkNewNotifications();
+      
+      // Check for new notifications every 30 seconds
+      const interval = setInterval(checkNewNotifications, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [token]);
+
+  // Clear notification dot when notification page is opened
+  useEffect(() => {
+    if (isNotificationPage && hasNewNotifications) {
+      setHasNewNotifications(false);
+      // Here you would typically mark notifications as read in your backend
+    }
+  }, [isNotificationPage, hasNewNotifications]);
 
   const logout = () => {
-    navigate('/login')
+    navigate('/login');
+    localStorage.removeItem('token');
+    setToken('');
+    setCartItems({});
+    setHasNewNotifications(false);
+  };
 
-    localStorage.removeItem('token')
-    setToken('')
-    setCartItems({})
+  const handleMainNavClick = () => {
+    setVisible(false);
+  };
+
+  const handleNotificationClick = () => {
+    // Clear the dot when user clicks on notification icon
+    setHasNewNotifications(false);
+    navigate('/notification');
+  };
+
+  // Not logged in - show only home, about + login
+  if (!token) {
+    return (
+      <div className="flex items-center justify-between py-5 px-8 font-medium">
+        {/* Logo */}
+        <Link to='/'><img src={assets.logoResized} className="w-5 h-5" alt="Logo" /></Link>
+
+        {/* Desktop Navigation */}
+        <ul className="hidden sm:flex gap-5 text-sm text-black">
+          <NavLink to="/" className="flex flex-col items-center gap-1">
+            <p>Home</p>
+            <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
+          </NavLink>
+          <NavLink to="/AboutEcobotanica" className="flex flex-col items-center gap-1">
+            <p>About Us</p>
+            <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
+          </NavLink>
+        </ul>
+
+        {/* Icons Section */}
+        <div className="flex items-center gap-6">
+          {/* Login Icon */}
+          <Link to="/login" className="text-gray-800 hover:text-green-600 transition-colors">
+            <FiLogIn className="w-5 h-5 cursor-pointer" />
+          </Link>
+          
+          <img onClick={() => setVisible(true)} src={assets.menu_icon} className="w-5 h-5 cursor-pointer sm:hidden" alt="Menu" />
+        </div>
+
+        {/* Sidebar Menu for Small Screens */}
+        {visible && (
+          <div className="fixed top-0 left-0 w-screen h-screen bg-white z-50 transition-all duration-300">
+            <div className="flex flex-col text-gray-600 p-4">
+              <div onClick={() => setVisible(false)} className="flex items-center gap-4 p-3 cursor-pointer border-b">
+                <img src={assets.drop_down} className="h-4 rotate-90" alt="Back" />
+                <p>Back</p>
+              </div>
+              <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/">
+                Home
+              </NavLink>
+              <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/AboutEcobotanica">
+                About Us
+              </NavLink>
+              <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/login">
+                Login
+              </NavLink>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
+  // Logged in - show appropriate navbar based on current page
   return (
     <div className="flex items-center justify-between py-5 px-8 font-medium">
       {/* Logo */}
-      <Link to='/' onClick={handleMainNavClick}><img src={assets.logoResized} className="w-5 h-5" alt="Logo" /></Link>
+      <Link to='/UserDashboard' onClick={handleMainNavClick}>
+        <img src={assets.logoResized} className="w-5 h-5" alt="Logo" />
+      </Link>
 
       {/* Desktop Navigation */}
       <ul className="hidden sm:flex gap-5 text-sm text-black">
-        {!isEcom ? (
+        {!isEcomPage ? (
+          // Main App Navigation
           <>
             <NavLink to="/UserDashboard" className="flex flex-col items-center gap-1" onClick={handleMainNavClick}>
               <p>Dashboard</p>
@@ -53,7 +150,7 @@ const Navbar = () => {
               <p>Plant Care</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
-            <NavLink to="/Ecom" className="flex flex-col items-center gap-1" onClick={() => setIsEcom(true)}>
+            <NavLink to="/Ecom" className="flex flex-col items-center gap-1">
               <p>E-com Store</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
@@ -63,6 +160,7 @@ const Navbar = () => {
             </NavLink>
           </>
         ) : (
+          // Ecom Navigation
           <>
             <NavLink to="/Ecom" className="flex flex-col items-center gap-1">
               <p>E-com</p>
@@ -80,20 +178,16 @@ const Navbar = () => {
               <p>CONTACT-US</p>
               <hr className='w-2/4 border-none h-[1.5px] bg-black self-center hidden' />
             </NavLink>
-           
           </>
         )}
       </ul>
 
       {/* Icons Section */}
       <div className="flex items-center gap-6">
+        {/* Profile with Dropdown */}
         <div className='group relative'>
-
-          <img onClick={() => token ? null : navigate('/login')} src={assets.profile_icon} className='w-5 h-5 cursor-pointer' alt="" />
-
-          {/* Dropdown */}
-
-          {token &&
+          <FiUser className='w-5 h-5 cursor-pointer text-gray-800' />
+          {token && (
             <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
               <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-600 rounded shadow-md'>
                 <NavLink to="/profilePage">
@@ -102,33 +196,35 @@ const Navbar = () => {
                 <p onClick={() => navigate('/orders')} className='cursor-pointer hover:text-black'>Orders</p>
                 <p onClick={logout} className='cursor-pointer hover:text-black'>Logout</p>
               </div>
-            </div>}
+            </div>
+          )}
         </div>
-        {/* {!isEcom && <img src={assets.Chat} className="w-5 h-5 cursor-pointer" alt="Chat" />} */}
 
-        {!isEcom && (
+        {/* Community Chat */}
+        {!isEcomPage && (
           <Link to="/CommunityChat">
-            <img
-              src={assets.Chat}
-              className="w-5 h-5 cursor-pointer"
-              alt="Community Chat"
-            />
+            <FiMessageCircle className="w-5 h-5 cursor-pointer text-gray-800" />
           </Link>
         )}
+
+        {/* Cart */}
         <Link to="/cart" className="relative">
-          <img src={assets.cart_icon} className="w-5 min-w-5" alt="Cart" />
+          <FiShoppingCart className="w-5 min-w-5 text-gray-800" />
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">
             {getCartCount()}
           </p>
         </Link>
-        {/* 🔔 Notification Bell Icon (NEW) */}
-        <Link to="/notification" className="relative">
+
+        {/* Notification Bell */}
+        <button onClick={handleNotificationClick} className="relative">
           <FiBell className="w-5 h-5 cursor-pointer text-gray-800" />
-          <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-red-600 text-white aspect-square rounded-full text-[8px]">
-            {notificationCount}
-          </p>
-        </Link>
-        <img onClick={() => setVisible(true)} src={assets.menu_icon} className="w-5 h-5 cursor-pointer sm:hidden" alt="Menu" />
+          {hasNewNotifications && !isNotificationPage && (
+            <div className="absolute right-[-2px] top-[-2px] w-2 h-2 bg-red-600 rounded-full"></div>
+          )}
+        </button>
+
+        {/* Mobile Menu Icon */}
+        <FiMenu onClick={() => setVisible(true)} className="w-5 h-5 cursor-pointer sm:hidden text-gray-800" />
       </div>
 
       {/* Sidebar Menu for Small Screens */}
@@ -139,7 +235,8 @@ const Navbar = () => {
               <img src={assets.drop_down} className="h-4 rotate-90" alt="Back" />
               <p>Back</p>
             </div>
-            {isEcom ? (
+            {isEcomPage ? (
+              // Ecom Mobile Menu
               <>
                 <NavLink onClick={() => setVisible(false)} className="py-3 pl-6 border-b border-gray-300" to="/Ecom">
                   E-com
@@ -155,12 +252,13 @@ const Navbar = () => {
                 </NavLink>
               </>
             ) : (
+              // Main App Mobile Menu
               <>
                 <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/UserDashboard">
                   Dashboard
                 </NavLink>
-                <NavLink onClick={handleMainNavClick} className="flex flex-col items-center gap-1" to="/PlantIdentification" >
-                  <p>Plant Identification</p>
+                <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/PlantIdentification">
+                  Plant Identification
                 </NavLink>
                 <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/plantDoctor">
                   Plant Doctor
@@ -171,7 +269,7 @@ const Navbar = () => {
                 <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/plantCare">
                   Plant Care
                 </NavLink>
-                <NavLink onClick={() => { setIsEcom(true); setVisible(false); }} className="py-3 pl-6 border-b border-gray-300" to="/Ecom">
+                <NavLink onClick={() => { setVisible(false); }} className="py-3 pl-6 border-b border-gray-300" to="/Ecom">
                   E-com Store
                 </NavLink>
                 <NavLink onClick={handleMainNavClick} className="py-3 pl-6 border-b border-gray-300" to="/plantationGuide">

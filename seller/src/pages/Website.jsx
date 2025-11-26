@@ -1,29 +1,16 @@
 import React from "react";
-import OverviewCard from "../compononts/OverviewCardAdmin";
-import LineChartComp from "../compononts/LineChartCompAdmin";
-import DonutChartComp from "../compononts/DonutChartCompAdmin";
-import BarChartComp from "../compononts/BarChartCompAdmin";
-import Title from "../compononts/Title";
+import OverviewCard from "../components/OverviewCardAdmin";
+import LineChartComp from "../components/LineChartCompAdmin";
+import DonutChartComp from "../components/DonutChartCompAdmin";
+import BarChartComp from "../components/BarChartCompAdmin";
+import Title from "../components/Title";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
     // Hook for programmatic navigation
     const navigate = useNavigate();
 
-    /* ====================
-       Static Dashboard Data
-       (You can replace this later with API calls)
-       // ===== Static data for now =====
-    // DB connection example:
-    // useEffect(() => {
-    //   fetch("/api/dashboard")
-    //     .then(res => res.json())
-    //     .then(data => setDashboard(data));
-    // }, []);
-
-
-    ===================== */
-    const stats = {
+        const stats = {
         newUsers: { value: 156, change: 15.03 },
         activeUsers: { value: 2318, change: 6.08 }
     };

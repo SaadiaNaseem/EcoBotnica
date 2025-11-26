@@ -5,7 +5,9 @@ import Add from "./pages/Add";
 import List from "./pages/List";
 import Orders from "./pages/Orders";
 import Login from "./components/Login";
+import AdminDashboard from "./pages/Website";
 import EAdashSellerDashboard from "./pages/EAdashSellerDashboard";
+import CommunityComplaints from "./pages/CommunityComplaints";
 import { ToastContainer } from "react-toastify";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -36,9 +38,11 @@ const App = () => {
               <Route path="/dashboard" element={<EAdashSellerDashboard />} />
 
               {/* Other Pages */}
+              <Route path="/website" element={<AdminDashboard />} />
               <Route path="/add" element={<Add token={token} />} />
               <Route path="/list" element={<List token={token} />} />
               <Route path="/orders" element={<Orders token={token} />} />
+              <Route path="/communityComplaints" element={<CommunityComplaints />} />
 
               {/* Fallback to Dashboard */}
               <Route path="*" element={<Navigate to="/" replace />} />

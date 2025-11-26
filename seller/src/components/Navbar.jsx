@@ -20,6 +20,7 @@ const Navbar = ({ setToken }) => {
     { name: "Add Items", href: "/add" },
     { name: "Active Orders", href: "/orders" },
     { name: "List Items", href: "/list" },
+    { name : "Website", href: "/website"}
   ];
 
   return (

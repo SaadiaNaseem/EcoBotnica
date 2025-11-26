@@ -65,16 +65,30 @@ const ProtectedEcomRoute = ({ children }) => {
   return children;
 };
 
+// ✅ Public Route - Redirect to dashboard if logged in
+const PublicRoute = ({ children }) => {
+  const { token } = useContext(ShopContext);
+  
+  if (token) {
+    return <Navigate to="/UserDashboard" replace />;
+  }
+  return children;
+};
+
 // ✅ Layout component for Navbar switching
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isLandingPage = location.pathname === "/";
+  const isLandingPage = location.pathname === "/" || location.pathname === "/AboutEcobotanica";
+  const { token } = useContext(ShopContext);
+
+  // Show searchbar only for logged-in users and not on landing pages
+  const showSearchbar = token && !isLandingPage;
 
   return (
     <>
       <ToastContainer />
       {isLandingPage ? <LandingNavbar /> : <Navbar />}
-      {!isLandingPage && <Searchbar />}
+      {showSearchbar && <Searchbar />}
       <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
         {children}
       </div>
@@ -88,10 +102,15 @@ const App = () => {
     <PlantIdentificationProvider>
       <Layout>
         <Routes>
-          {/* 🌿 Landing Page */}
-          <Route path="/" element={<LandingPage />} />
+          {/* 🌿 Public Landing Pages */}
+          <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+          <Route path="/AboutEcobotanica" element={<PublicRoute><AboutEcobotanica /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+          <Route path="/verify" element={<PublicRoute><VerifyPage /></PublicRoute>} />
+          <Route path="/chooseRole" element={<PublicRoute><ChooseRole /></PublicRoute>} />
 
-          {/* 🔒 Protected Routes */}
+          {/* 🔒 Protected Routes - All require login */}
           <Route
             path='/UserDashboard'
             element={
@@ -124,7 +143,14 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="/AdminDashboard" element={<AdminDashboard />} />
+          <Route 
+            path="/AdminDashboard" 
+            element={
+              <ProtectedRoute message="Please login to access Admin Dashboard">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
           <Route
             path='/plantationGuide'
             element={
@@ -163,8 +189,6 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* 🌿 Plant Identification Route */}
           <Route 
             path='/plantidentification' 
             element={
@@ -173,24 +197,56 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
+          <Route
+            path='/companionPlanting'
+            element={
+              <ProtectedRoute message="Please login to access Companion Planting">
+                <CompanionPlanting />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/PlantProfile'
+            element={
+              <ProtectedRoute message="Please login to access Plant Profile">
+                <PlantProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/addnewplantprofile'
+            element={
+              <ProtectedRoute message="Please login to add new plant profile">
+                <AddNewPlantProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/CommunityChat'
+            element={
+              <ProtectedRoute message="Please login to access Community Chat">
+                <CommunityChat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/communityComplaints'
+            element={
+              <ProtectedRoute message="Please login to access Community Complaints">
+                <CommunityComplaints />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/profilePage'
+            element={
+              <ProtectedRoute message="Please login to access your profile">
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* 🌿 Public Routes */}
-          <Route path="/communityComplaints" element={<CommunityComplaints />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path='/PlantProfile' element={<PlantProfile />} />
-          <Route path='/addnewplantprofile' element={<AddNewPlantProfile />} />
-          <Route path='/collection' element={<Collection />} />
-          <Route path='/contacts' element={<Contacts />} />
-          <Route path='/product/:productId' element={<Product />} />
-          <Route path='/cart' element={<Cart />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/aboutUs' element={<AboutUs />} />
-          <Route path='/placeOrder' element={<PlaceOrder />} />
-          <Route path='/orders' element={<Orders />} />
-          <Route path='/companionPlanting' element={<CompanionPlanting />} />
-          <Route path='/AboutEcobotanica' element={<AboutEcobotanica />} />
-
-          {/* 🛒 Ecom Protected */}
+          {/* 🛒 Ecom Routes */}
           <Route
             path='/Ecom'
             element={
@@ -199,10 +255,65 @@ const App = () => {
               </ProtectedEcomRoute>
             }
           />
+          <Route
+            path='/collection'
+            element={
+              <ProtectedEcomRoute>
+                <Collection />
+              </ProtectedEcomRoute>
+            }
+          />
+          <Route
+            path='/product/:productId'
+            element={
+              <ProtectedEcomRoute>
+                <Product />
+              </ProtectedEcomRoute>
+            }
+          />
+          <Route
+            path='/cart'
+            element={
+              <ProtectedEcomRoute>
+                <Cart />
+              </ProtectedEcomRoute>
+            }
+          />
+          <Route
+            path='/placeOrder'
+            element={
+              <ProtectedEcomRoute>
+                <PlaceOrder />
+              </ProtectedEcomRoute>
+            }
+          />
+          <Route
+            path='/orders'
+            element={
+              <ProtectedEcomRoute>
+                <Orders />
+              </ProtectedEcomRoute>
+            }
+          />
+          <Route
+            path='/aboutUs'
+            element={
+              <ProtectedEcomRoute>
+                <AboutUs />
+              </ProtectedEcomRoute>
+            }
+          />
+          <Route
+            path='/contacts'
+            element={
+              <ProtectedEcomRoute>
+                <Contacts />
+              </ProtectedEcomRoute>
+            }
+          />
 
-          <Route path='/profilePage' element={<ProfilePage />} />
-          <Route path='/verify' element={<VerifyPage />} />
-          <Route path='/CommunityChat' element={<CommunityChat />} />
+          {/* 🔄 Redirect unknown routes to appropriate page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
     </PlantIdentificationProvider>

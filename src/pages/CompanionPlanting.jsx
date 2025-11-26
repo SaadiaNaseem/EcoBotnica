@@ -514,3 +514,5 @@ const CompanionPlantingAR = () => {
 };
 
 export default CompanionPlantingAR;
+
+
