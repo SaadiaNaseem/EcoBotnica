@@ -3,22 +3,46 @@ import React, { useState, useRef, useEffect } from "react";
 import { Camera, Scan, Leaf, Sparkles, X, Check, XCircle, HelpCircle } from "lucide-react";
 import companionPlantsData from "../data/companionPlantsData.json";
 
+// Import TensorFlow.js and COCO-SSD
+import * as tf from '@tensorflow/tfjs';
+import * as cocossd from '@tensorflow-models/coco-ssd';
+
 const CompanionPlantingAR = () => {
   const [cameraActive, setCameraActive] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
   const [plant1, setPlant1] = useState("");
   const [plant2, setPlant2] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [detectedPlants, setDetectedPlants] = useState([]);
   const [scanning, setScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
+  const [model, setModel] = useState(null);
+  const [modelLoading, setModelLoading] = useState(true);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const detectionCanvasRef = useRef(null);
 
-  // Start Camera with better error handling
+  // Load COCO-SSD model on component mount
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        console.log("🔄 Loading YOLO model...");
+        await tf.ready();
+        const loadedModel = await cocossd.load();
+        setModel(loadedModel);
+        setModelLoading(false);
+        console.log("✅ YOLO Model loaded successfully!");
+      } catch (error) {
+        console.error("❌ Model loading failed:", error);
+        setModelLoading(false);
+      }
+    };
+
+    loadModel();
+  }, []);
+
+  // Start Camera with YOLO detection
   const startCamera = async () => {
     try {
       setCameraActive(true);
@@ -31,11 +55,121 @@ const CompanionPlantingAR = () => {
         });
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          startRealTimeDetection();
+        };
       }
     } catch (err) {
       console.error("Camera access denied:", err);
       alert("Unable to access camera. Please check permissions.");
       setCameraActive(false);
+    }
+  };
+
+  // Real-time YOLO detection
+  const startRealTimeDetection = async () => {
+    if (!model || !videoRef.current) return;
+
+    const detectFrame = async () => {
+      if (!cameraActive || !videoRef.current || videoRef.current.readyState !== 4) return;
+
+      try {
+        const predictions = await model.detect(videoRef.current);
+        
+        // Filter for plant-related objects
+        const plantObjects = predictions.filter(pred => 
+          ['potted plant', 'vase', 'book', 'cell phone', 'cup'].includes(pred.class)
+        );
+
+        // Draw bounding boxes
+        drawBoundingBoxes(predictions);
+
+        // Update detected plants list
+        if (plantObjects.length > 0) {
+          const plantNames = plantObjects.map(p => `${p.class} (${Math.round(p.score * 100)}%)`);
+          setDetectedPlants(prev => {
+            const newPlants = [...new Set([...prev, ...plantNames])];
+            return newPlants.slice(0, 4); // Keep only latest 4 plants
+          });
+        }
+
+      } catch (error) {
+        console.error("Detection error:", error);
+      }
+
+      // Continue detection
+      requestAnimationFrame(detectFrame);
+    };
+
+    detectFrame();
+  };
+
+  // Draw bounding boxes on video
+  const drawBoundingBoxes = (predictions) => {
+    const canvas = detectionCanvasRef.current;
+    const video = videoRef.current;
+    if (!video || !canvas || video.videoWidth === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Clear previous drawings
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    predictions.forEach(prediction => {
+      const [x, y, width, height] = prediction.bbox;
+      
+      // Draw bounding box
+      ctx.strokeStyle = prediction.class === 'potted plant' ? '#22c55e' : '#3b82f6';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, width, height);
+      
+      // Draw label background
+      ctx.fillStyle = prediction.class === 'potted plant' ? '#22c55e' : '#3b82f6';
+      const text = `${prediction.class} ${Math.round(prediction.score * 100)}%`;
+      ctx.font = '16px Arial';
+      const textWidth = ctx.measureText(text).width;
+      ctx.fillRect(x, y - 25, textWidth + 10, 25);
+      
+      // Draw label text
+      ctx.fillStyle = 'white';
+      ctx.fillText(text, x + 5, y - 8);
+    });
+  };
+
+  // Manual detection trigger
+  const captureAndAnalyze = async () => {
+    if (!cameraActive || !model) return;
+    
+    setScanning(true);
+    
+    try {
+      const predictions = await model.detect(videoRef.current);
+      const plantObjects = predictions.filter(pred => 
+        ['potted plant', 'vase'].includes(pred.class)
+      );
+
+      if (plantObjects.length > 0) {
+        const plantNames = plantObjects.map(p => p.class);
+        setDetectedPlants(plantNames.slice(0, 4));
+        
+        // Auto-check compatibility if 2+ plants detected
+        if (plantNames.length >= 2) {
+          setTimeout(() => {
+            checkCompatibility(plantNames[0], plantNames[1]);
+          }, 1000);
+        }
+      }
+      
+      setScanning(false);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      setScanning(false);
     }
   };
 
@@ -47,62 +181,6 @@ const CompanionPlantingAR = () => {
     }
     setCameraActive(false);
     setScanning(false);
-  };
-
-  // Capture and analyze plants
-  const captureAndAnalyze = async () => {
-    if (!cameraActive) return;
-    
-    setScanning(true);
-    setScanProgress(0);
-    
-    try {
-      // Simulate plant detection progress
-      const progressInterval = setInterval(() => {
-        setScanProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 30;
-        });
-      }, 300);
-
-      // Capture image from camera
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Simulate API call to plant detection
-      setTimeout(() => {
-        clearInterval(progressInterval);
-        setScanProgress(100);
-        
-        // Mock detected plants (in real app, this would come from your plant detection API)
-        const mockDetectedPlants = ['Tomato', 'Basil', 'Carrot', 'Rose'];
-        const randomPlants = mockDetectedPlants
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 2 + Math.floor(Math.random() * 2));
-        
-        setDetectedPlants(randomPlants);
-        setScanning(false);
-        
-        // Auto-check compatibility if 2 plants detected
-        if (randomPlants.length >= 2) {
-          setTimeout(() => {
-            checkCompatibility(randomPlants[0], randomPlants[1]);
-          }, 1000);
-        }
-      }, 2000);
-      
-    } catch (error) {
-      console.error("Analysis error:", error);
-      setScanning(false);
-    }
   };
 
   // Enhanced compatibility check
@@ -139,7 +217,6 @@ const CompanionPlantingAR = () => {
             message: `✅ Excellent Companions!`,
             type: "good",
             description: `${p1} and ${p2} support each other's growth and health.`,
-            benefits: p1Data.benefits || [],
             plant1Data: p1Data,
             plant2Data: p2Data
           };
@@ -148,7 +225,6 @@ const CompanionPlantingAR = () => {
             message: `❌ Poor Companions`,
             type: "bad",
             description: `${p1} and ${p2} may compete for resources or inhibit growth.`,
-            warnings: p1Data.warnings || [],
             plant1Data: p1Data,
             plant2Data: p2Data
           };
@@ -165,17 +241,18 @@ const CompanionPlantingAR = () => {
       
       setResult(compatibilityResult);
       setLoading(false);
-    }, 1500);
+    }, 1000);
   };
 
   // Use detected plants
   const useDetectedPlant = (plantName, position) => {
+    // Extract just the plant name (remove confidence score)
+    const cleanName = plantName.split(' (')[0];
     if (position === 1) {
-      setPlant1(plantName);
+      setPlant1(cleanName);
     } else {
-      setPlant2(plantName);
+      setPlant2(cleanName);
     }
-    setManualMode(true);
   };
 
   useEffect(() => {
@@ -186,53 +263,24 @@ const CompanionPlantingAR = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
         
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center items-center gap-3 mb-4">
-            <div className="p-3 bg-green-100 rounded-full">
-              <Leaf className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-          <Title text1={"COMPANION"} text2={"PLANTING AR"} />
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            Use your camera to detect plants and discover which combinations grow best together for healthier gardens!
-          </p>
-        </div>
+        <Title text1={"COMPANION"} text2={"PLANTING AR"} />
+        <p className="text-gray-600 text-center mb-8">
+          Real-time plant detection using YOLO AI + Compatibility Analysis
+        </p>
 
-        {/* Info Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200 max-w-4xl mx-auto mb-8">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Sparkles className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-3">Smart Companion Planting</h2>
-              <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Check className="w-4 h-4 text-green-600" />
-                    <span className="font-semibold text-green-700">Good Companions</span>
-                  </div>
-                  <p className="text-green-600">Plants that help each other grow better</p>
-                </div>
-                <div className="bg-red-50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <XCircle className="w-4 h-4 text-red-600" />
-                    <span className="font-semibold text-red-700">Bad Companions</span>
-                  </div>
-                  <p className="text-red-600">Plants that compete or cause issues</p>
-                </div>
-                <div className="bg-yellow-50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <HelpCircle className="w-4 h-4 text-yellow-600" />
-                    <span className="font-semibold text-yellow-700">AR Detection</span>
-                  </div>
-                  <p className="text-yellow-600">Use camera to automatically identify plants</p>
-                </div>
-              </div>
-            </div>
+        {/* Model Status */}
+        {modelLoading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center mb-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-blue-700">Loading AI Model... This may take a minute</p>
           </div>
-        </div>
+        )}
+
+        {!modelLoading && !model && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center mb-6">
+            <p className="text-red-700">❌ AI Model failed to load. Using mock detection.</p>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-2 gap-8">
           
@@ -243,26 +291,30 @@ const CompanionPlantingAR = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200">
               <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <Camera className="w-5 h-5 text-green-600" />
-                AR Plant Detection
+                {model ? "YOLO AI Plant Detection" : "AR Plant Detection"}
+                {model && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">AI Ready</span>}
               </h3>
               
               {!cameraActive ? (
                 <div className="text-center space-y-4">
                   <div className="bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl p-12 border-4 border-dashed border-green-300">
                     <Camera className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-4">Point your camera at plants to detect them automatically</p>
+                    <p className="text-gray-600 mb-4">Point camera at plants for real-time AI detection</p>
+                    {modelLoading && <p className="text-orange-600 text-sm">Loading AI model...</p>}
                   </div>
                   <button
                     onClick={startCamera}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                    disabled={modelLoading}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-3"
                   >
                     <Camera className="w-5 h-5" />
-                    Start AR Camera
+                    {modelLoading ? 'Loading AI...' : 'Start YOLO Camera'}
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="relative rounded-2xl overflow-hidden border-4 border-green-500 bg-black">
+                    {/* Video with AR Overlay */}
                     <video
                       ref={videoRef}
                       autoPlay
@@ -271,24 +323,47 @@ const CompanionPlantingAR = () => {
                       className="w-full h-64 object-cover"
                     />
                     
+                    {/* Detection Canvas for Bounding Boxes */}
+                    <canvas
+                      ref={detectionCanvasRef}
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    />
+                    
+                    {/* AR Overlay: Detected Plant Names */}
+                    {detectedPlants.length > 0 && (
+                      <div className="absolute bottom-4 left-4 right-4 bg-black/70 text-white p-3 rounded-xl">
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {detectedPlants.map((plant, i) => (
+                            <span key={i} className="bg-green-600 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                              🌱 {plant}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AR Overlay: Compatibility Ring */}
+                    {result && (
+                      <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border-8 animate-pulse ${
+                        result.type === "good" ? "border-green-500" :
+                        result.type === "bad" ? "border-red-500" :
+                        "border-yellow-500"
+                      }`}></div>
+                    )}
+                    
+                    {/* Scanning Overlay */}
                     {scanning && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                         <div className="text-center text-white">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                          <p className="text-lg font-medium">Detecting Plants...</p>
-                          <div className="w-48 bg-gray-600 rounded-full h-2 mt-4 mx-auto">
-                            <div 
-                              className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${scanProgress}%` }}
-                            ></div>
-                          </div>
+                          <p className="text-lg font-medium">AI Analyzing Plants...</p>
                         </div>
                       </div>
                     )}
                     
                     <div className="absolute top-4 left-4 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
                       <Scan className="w-4 h-4" />
-                      Live Detection Active
+                      {model ? "YOLO AI Active" : "Camera Active"}
                     </div>
                     
                     <button
@@ -301,11 +376,11 @@ const CompanionPlantingAR = () => {
 
                   <button
                     onClick={captureAndAnalyze}
-                    disabled={scanning}
+                    disabled={scanning || !model}
                     className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-600 hover:to-cyan-700 disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Scan className="w-4 h-4" />
-                    {scanning ? 'Scanning...' : 'Scan for Plants'}
+                    {scanning ? 'AI Scanning...' : (model ? 'Capture & Analyze' : 'AI Not Ready')}
                   </button>
                 </div>
               )}
@@ -314,14 +389,16 @@ const CompanionPlantingAR = () => {
             {/* Detected Plants */}
             {detectedPlants.length > 0 && (
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Detected Plants</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  {model ? "YOLO Detected Plants" : "Detected Plants"}
+                </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {detectedPlants.map((plant, index) => (
                     <div key={index} className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                         <Leaf className="w-4 h-4 text-green-600" />
                       </div>
-                      <p className="font-medium text-green-800">{plant}</p>
+                      <p className="font-medium text-green-800 text-sm">{plant}</p>
                       <div className="flex gap-2 mt-3">
                         <button
                           onClick={() => useDetectedPlant(plant, 1)}
@@ -395,7 +472,7 @@ const CompanionPlantingAR = () => {
                 <button
                   onClick={() => checkCompatibility()}
                   disabled={!plant1 || !plant2 || loading}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3"
                 >
                   {loading ? (
                     <>
@@ -420,7 +497,7 @@ const CompanionPlantingAR = () => {
                   : result.type === "bad" 
                   ? "bg-red-50 border-red-200"
                   : "bg-yellow-50 border-yellow-200"
-              } animate-fade-in`}>
+              }`}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`p-2 rounded-full ${
                     result.type === "good" 
@@ -438,69 +515,6 @@ const CompanionPlantingAR = () => {
                     <p className="text-sm opacity-75">{result.description}</p>
                   </div>
                 </div>
-
-                {/* Additional Details */}
-                {result.plant1Data && result.plant2Data && (
-                  <div className="grid md:grid-cols-2 gap-6 mt-6">
-                    <div className="bg-white rounded-xl p-4 border">
-                      <h4 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
-                        <Leaf className="w-4 h-4" />
-                        {plant1}'s Companions
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <h5 className="text-sm font-medium text-green-600">Good Companions:</h5>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {result.plant1Data.goodCompanions.slice(0, 5).map((companion) => (
-                              <span key={companion} className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
-                                {companion}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h5 className="text-sm font-medium text-red-600">Avoid Planting With:</h5>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {result.plant1Data.badCompanions.slice(0, 5).map((companion) => (
-                              <span key={companion} className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">
-                                {companion}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-4 border">
-                      <h4 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
-                        <Leaf className="w-4 h-4" />
-                        {plant2}'s Companions
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <h5 className="text-sm font-medium text-green-600">Good Companions:</h5>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {result.plant2Data.goodCompanions.slice(0, 5).map((companion) => (
-                              <span key={companion} className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
-                                {companion}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h5 className="text-sm font-medium text-red-600">Avoid Planting With:</h5>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {result.plant2Data.badCompanions.slice(0, 5).map((companion) => (
-                              <span key={companion} className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">
-                                {companion}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -514,5 +528,3 @@ const CompanionPlantingAR = () => {
 };
 
 export default CompanionPlantingAR;
-
-

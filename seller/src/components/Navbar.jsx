@@ -7,12 +7,11 @@ const Navbar = ({ setToken }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleMainNavClick = () => {
-    window.location.href = "http://localhost:5173/Ecom"; // Redirect to main site
+    window.location.href = "http://localhost:5173/login"; // Redirect to main site
   };
-
   const handleLogout = () => {
     setToken("");
-    window.location.href = "http://localhost:5173/Ecom"; // Redirect after logout
+    window.location.href = "http://localhost:5173/login"; // Redirect after logout
   };
 
   const navLinks = [
@@ -20,7 +19,7 @@ const Navbar = ({ setToken }) => {
     { name: "Add Items", href: "/add" },
     { name: "Active Orders", href: "/orders" },
     { name: "List Items", href: "/list" },
-    { name : "Website", href: "/website"}
+    { name : "Community", href: "/website"}
   ];
 
   return (

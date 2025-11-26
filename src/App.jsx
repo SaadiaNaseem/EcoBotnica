@@ -27,9 +27,7 @@ import AddNewPlantProfile from './pages/AddNewPlantProfile';
 import CommunityChat from './pages/CommunityChat';
 import ChooseRole from './pages/chooseRole';
 import { ShopContext } from './context/ShopContext';
-import AdminDashboard from "./pages/AdminDashboard";
 import { DiseaseProvider } from './context/disease';
-import CommunityComplaints from './pages/CommunityComplaints';
 import ForgotPassword from './compononts/ForgotPassword';
 import { PlantIdentificationProvider } from './context/plantIdentification';
 
@@ -143,14 +141,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route 
-            path="/AdminDashboard" 
-            element={
-              <ProtectedRoute message="Please login to access Admin Dashboard">
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
+          
           <Route
             path='/plantationGuide'
             element={
@@ -229,14 +220,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path='/communityComplaints'
-            element={
-              <ProtectedRoute message="Please login to access Community Complaints">
-                <CommunityComplaints />
-              </ProtectedRoute>
-            }
-          />
+          
           <Route
             path='/profilePage'
             element={
