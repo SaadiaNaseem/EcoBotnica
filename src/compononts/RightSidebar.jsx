@@ -34,12 +34,9 @@ const RightSidebar = () => {
           alt="Visual Guide"
           className="w-full h-[190px] object-cover rounded-lg mb-3 shadow-[0_4px_10px_rgba(34,197,94,0.5)] transition-transform duration-500 hover:scale-105"
         />
-        <button
-          onClick={handleVisualClick}
-          className="bg-black text-white rounded-full px-4 py-2 w-full hover:bg-gray-800 transition"
-        >
-          Visual Aids
-        </button>
+        <div className="bg-black text-white rounded-full px-4 py-2 w-full transition-none select-none">
+          Step By Step Plantation Guide Here
+        </div>
       </div>
 
       {/* 2️⃣ Plant Image Section */}

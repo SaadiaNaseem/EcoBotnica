@@ -4,9 +4,7 @@ export function CategoryBadge({ category, className }) {
   const label =
     category === "plant-care"
       ? "Plant Care"
-      : category === "community"
-      ? "Community"
-      : "Weather";
+      : "Weather"; // community removed
 
   return (
     <span
@@ -16,6 +14,6 @@ export function CategoryBadge({ category, className }) {
       )}
     >
       {label}
-    </span>
-  );
+    </span>
+  );
 }

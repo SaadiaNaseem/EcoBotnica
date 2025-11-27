@@ -79,7 +79,7 @@ Here is the user input: "${prompt}"
         },
         {
           headers: {
-            Authorization: "Bearer API_KEY", // 🔑 your actual API key here
+            Authorization: "Bearer ", // 🔑 your actual API key here
             "Content-Type": "application/json",
           },
         }

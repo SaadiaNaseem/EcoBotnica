@@ -87,7 +87,7 @@ Keep it practical and easy to understand for home gardeners.`;
         },
         {
           headers: {
-            Authorization: "Bearer API KEY", // Add your key
+            Authorization: "Bearer", // Add your key
             "Content-Type": "application/json",
           },
         }

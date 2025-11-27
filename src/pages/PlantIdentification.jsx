@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, Scan, Leaf, Sparkles, Download, Share2, Bookmark, Clock, Zap, Flower, ThermometerSun, Droplets, Sprout } from 'lucide-react';
+import { Camera, Upload, Scan, Leaf, Sparkles, Download, Share2, Bookmark, Clock, Zap, Flower, ThermometerSun, Droplets, Sprout, Sun, Thermometer, Gauge, Scissors } from 'lucide-react';
 import { usePlantIdentification } from '../context/plantIdentification';
 import Title from '../compononts/Title';
 
@@ -23,121 +23,194 @@ const PlantIdentification = () => {
   const streamRef = useRef(null);
   const navigate = useNavigate();
 
-  // Format AI response with proper styling
-  const formatAIResponse = (text) => {
-    if (!text) return null;
+  // Format structured data for display
+  const renderStructuredData = (data) => {
+    if (!data || typeof data !== 'object') {
+      return (
+        <div className="text-center text-gray-500 py-8">
+          <Leaf className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p>No detailed analysis available</p>
+        </div>
+      );
+    }
 
-    // Split by sections and create styled components
-    const sections = text.split('**').filter(section => section.trim());
-    
-    return sections.map((section, index) => {
-      if (section.includes(':')) {
-        const [title, ...contentParts] = section.split(':');
-        const content = contentParts.join(':').trim();
-        
-        // Special styling for different sections
-        if (title.trim().includes('🌿 PLANT IDENTIFICATION')) {
-          return (
-            <div key={index} className="mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Leaf className="w-5 h-5 text-green-600" />
-                </div>
-                <h3 className="text-xl font-bold text-green-800">Plant Identification</h3>
+    return (
+      <div className="space-y-6">
+        {/* Identification Section */}
+        {data.identification && (
+          <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+            <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center gap-2">
+              <Leaf className="w-5 h-5" />
+              Plant Identification
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Common Name</p>
+                <p className="font-semibold text-gray-800">{data.identification.commonName}</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-green-200">
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {content}
-                </div>
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Scientific Name</p>
+                <p className="font-semibold text-gray-800 italic">{data.identification.scientificName}</p>
               </div>
-            </div>
-          );
-        }
-        
-        if (title.trim().includes('📊 BASIC CHARACTERISTICS')) {
-          return (
-            <div key={index} className="mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Flower className="w-5 h-5 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-800">Basic Characteristics</h3>
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Family</p>
+                <p className="font-semibold text-gray-800">{data.identification.family}</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-blue-200">
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {content}
-                </div>
-              </div>
-            </div>
-          );
-        }
-        
-        if (title.trim().includes('🌍 GROWING CONDITIONS')) {
-          return (
-            <div key={index} className="mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <ThermometerSun className="w-5 h-5 text-amber-600" />
-                </div>
-                <h3 className="text-xl font-bold text-amber-800">Growing Conditions</h3>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-amber-200">
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {content}
-                </div>
-              </div>
-            </div>
-          );
-        }
-        
-        if (title.trim().includes('💧 CARE & MAINTENANCE')) {
-          return (
-            <div key={index} className="mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-cyan-100 rounded-lg">
-                  <Droplets className="w-5 h-5 text-cyan-600" />
-                </div>
-                <h3 className="text-xl font-bold text-cyan-800">Care & Maintenance</h3>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-cyan-200">
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {content}
-                </div>
-              </div>
-            </div>
-          );
-        }
-        
-        if (title.trim().includes('⚠️ TOXICITY ASSESSMENT')) {
-          return (
-            <div key={index} className="mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <Sprout className="w-5 h-5 text-red-600" />
-                </div>
-                <h3 className="text-xl font-bold text-red-800">Toxicity Assessment</h3>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-red-200">
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {content}
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        // Default section styling
-        return (
-          <div key={index} className="mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">{title.trim()}</h4>
-            <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50 rounded-lg p-3">
-              {content}
             </div>
           </div>
-        );
-      }
-      return null;
-    });
+        )}
+
+        {/* Characteristics */}
+        {data.characteristics && (
+          <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+            <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+              <Flower className="w-5 h-5" />
+              Physical Characteristics
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Description</p>
+                <p className="text-sm text-gray-700">{data.characteristics.description}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Height</p>
+                <p className="font-semibold text-gray-800">{data.characteristics.height}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Blooming Season</p>
+                <p className="font-semibold text-gray-800">{data.characteristics.bloomingSeason}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-sm text-gray-500">Lifespan</p>
+                <p className="font-semibold text-gray-800">{data.characteristics.lifespan}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Growing Conditions */}
+        {data.growingConditions && (
+          <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
+            <h3 className="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
+              <ThermometerSun className="w-5 h-5" />
+              Growing Conditions
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-white rounded-lg p-3 text-center">
+                <Sun className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Sunlight</p>
+                <p className="font-semibold text-gray-800 text-sm">{data.growingConditions.sunlight}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 text-center">
+                <Droplets className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Water</p>
+                <p className="font-semibold text-gray-800 text-sm">{data.growingConditions.water}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 text-center">
+                <Sprout className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Soil</p>
+                <p className="font-semibold text-gray-800 text-sm">{data.growingConditions.soil}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 text-center">
+                <Thermometer className="w-6 h-6 text-red-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Temperature</p>
+                <p className="font-semibold text-gray-800 text-sm">{data.growingConditions.temperature}</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 text-center">
+                <Gauge className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Humidity</p>
+                <p className="font-semibold text-gray-800 text-sm">{data.growingConditions.humidity}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Care Instructions */}
+        {data.careInstructions && (
+          <div className="bg-cyan-50 rounded-xl p-6 border border-cyan-200">
+            <h3 className="text-lg font-bold text-cyan-800 mb-4 flex items-center gap-2">
+              <Scissors className="w-5 h-5" />
+              Care Instructions
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold text-cyan-700 mb-2">Watering</h4>
+                <p className="text-sm text-gray-700 bg-white rounded-lg p-3">{data.careInstructions.watering}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-cyan-700 mb-2">Fertilizing</h4>
+                <p className="text-sm text-gray-700 bg-white rounded-lg p-3">{data.careInstructions.fertilizing}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-cyan-700 mb-2">Pruning</h4>
+                <p className="text-sm text-gray-700 bg-white rounded-lg p-3">{data.careInstructions.pruning}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-cyan-700 mb-2">Maintenance</h4>
+                <p className="text-sm text-gray-700 bg-white rounded-lg p-3">{data.careInstructions.maintenance}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Propagation */}
+        {data.propagation && (
+          <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+            <h3 className="text-lg font-bold text-purple-800 mb-2">Propagation Methods</h3>
+            <p className="text-sm text-gray-700 bg-white rounded-lg p-3">{data.propagation}</p>
+          </div>
+        )}
+
+        {/* Common Uses */}
+        {data.commonUses && data.commonUses.length > 0 && (
+          <div className="bg-indigo-50 rounded-xl p-6 border border-indigo-200">
+            <h3 className="text-lg font-bold text-indigo-800 mb-4">Common Uses</h3>
+            <div className="flex flex-wrap gap-2">
+              {data.commonUses.map((use, index) => (
+                <span key={index} className="bg-white text-indigo-700 px-3 py-1 rounded-full text-sm border border-indigo-200">
+                  {use}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Toxicity */}
+        {data.toxicity && (
+          <div className="bg-red-50 rounded-xl p-6 border border-red-200">
+            <h3 className="text-lg font-bold text-red-800 mb-2">⚠️ Toxicity Information</h3>
+            <p className="text-sm text-red-700 bg-white rounded-lg p-3">{data.toxicity}</p>
+          </div>
+        )}
+
+        {/* Common Problems */}
+        {data.commonProblems && data.commonProblems.length > 0 && (
+          <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
+            <h3 className="text-lg font-bold text-orange-800 mb-4">Common Problems & Solutions</h3>
+            <div className="space-y-3">
+              {data.commonProblems.map((problem, index) => (
+                <div key={index} className="bg-white rounded-lg p-4 border border-orange-100">
+                  <h4 className="font-semibold text-orange-700 mb-1">{problem.problem}</h4>
+                  <p className="text-sm text-gray-600 mb-2"><strong>Symptoms:</strong> {problem.symptoms}</p>
+                  <p className="text-sm text-gray-700"><strong>Solution:</strong> {problem.solution}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Fun Fact */}
+        {data.funFact && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+            <h3 className="text-lg font-bold text-green-800 mb-2 flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Did You Know?
+            </h3>
+            <p className="text-green-700">{data.funFact}</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Camera Functions
@@ -253,16 +326,18 @@ const PlantIdentification = () => {
           plant_name: result.modelUsed === 'plant' ? 'Identified Plant' : 'Identified Flower',
           scientific_name: "AI Analysis Complete",
           family: result.modelUsed === 'plant' ? 'Plant Species' : 'Flower Family',
-          confidence: result.confidence / 100,
+          confidence: result.confidence,
           description: result.message,
           care_tips: [
             "Based on comprehensive AI analysis",
             "Follow the detailed care instructions above",
             "Monitor plant health regularly"
           ],
-          fun_fact: `This identification was powered by our ${result.modelUsed} model and enhanced with AI analysis!`,
+          fun_fact: `This identification was powered by our ${result.modelUsed} model with ${Math.round(result.confidence)}% confidence!`,
           modelUsed: result.modelUsed,
-          detailedReport: result.detailedReport
+          detailedReport: result.detailedReport,
+          plantType: result.plantType,
+          flowerType: result.flowerType
         };
         
         setPlantInfo(formattedResult);
@@ -302,16 +377,18 @@ const PlantIdentification = () => {
         plant_name: classificationResult.modelUsed === 'plant' ? 'Identified Plant' : 'Identified Flower',
         scientific_name: "AI Analysis Complete",
         family: classificationResult.modelUsed === 'plant' ? 'Plant Species' : 'Flower Family',
-        confidence: classificationResult.confidence / 100,
+        confidence: classificationResult.confidence,
         description: classificationResult.message,
         care_tips: [
           "Based on comprehensive AI analysis",
           "Follow the detailed care instructions above",
           "Monitor plant health regularly"
         ],
-        fun_fact: `This identification was powered by our ${classificationResult.modelUsed} model and enhanced with AI analysis!`,
+        fun_fact: `This identification was powered by our ${classificationResult.modelUsed} model with ${Math.round(classificationResult.confidence)}% confidence!`,
         modelUsed: classificationResult.modelUsed,
-        detailedReport: classificationResult.detailedReport
+        detailedReport: classificationResult.detailedReport,
+        plantType: classificationResult.plantType,
+        flowerType: classificationResult.flowerType
       };
       
       setPlantInfo(formattedResult);
@@ -384,7 +461,7 @@ const PlantIdentification = () => {
               <p className={`${
                 classificationResult.modelUsed === 'plant' ? 'text-green-600' : 'text-pink-600'
               } text-sm`}>
-                Confidence: {classificationResult.confidence}% • Model: {classificationResult.modelUsed}
+                Confidence: {Math.round(classificationResult.confidence)}% • Model: {classificationResult.modelUsed}
               </p>
             </div>
           </div>
@@ -448,11 +525,16 @@ const PlantIdentification = () => {
             {showDetails && plantInfo && (
               <div id="plant-results" className="bg-white rounded-2xl p-8 shadow-lg border border-green-100 animate-fade-in">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-gray-800">{plantInfo.plant_name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    {plantInfo.detailedReport?.identification?.commonName || 
+                     plantInfo.plantType?.replace(/_/g, ' ').toUpperCase() || 
+                     plantInfo.flowerType?.replace(/_/g, ' ').toUpperCase() || 
+                     'Identified Plant'}
+                  </h3>
                   <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
                     <Sparkles className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium text-green-700">
-                      {plantInfo.confidence * 100}% Match
+                      {Math.round(plantInfo.confidence)}% Confidence
                     </span>
                   </div>
                 </div>
@@ -460,18 +542,22 @@ const PlantIdentification = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm text-gray-500">Scientific Name</p>
-                      <p className="font-medium text-gray-800">{plantInfo.scientific_name}</p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-500">Type</p>
                       <p className="font-medium text-gray-800 capitalize">{plantInfo.modelUsed}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-sm text-gray-500">Confidence</p>
+                      <p className="font-medium text-gray-800">{Math.round(plantInfo.confidence)}%</p>
                     </div>
                   </div>
 
                   {/* Detailed AI Analysis */}
                   <div className="space-y-6">
-                    {formatAIResponse(plantInfo.detailedReport || plantInfo.description)}
+                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-purple-500" />
+                      Detailed Analysis
+                    </h4>
+                    {renderStructuredData(plantInfo.detailedReport)}
                   </div>
 
                   <div>

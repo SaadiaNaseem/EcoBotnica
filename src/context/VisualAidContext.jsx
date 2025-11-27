@@ -34,7 +34,7 @@ export const VisualAidProvider = ({ children }) => {
         },
         {
           headers: {
-            Authorization: "Bearer API_KEY",
+            Authorization: "Bearer ",
             "Content-Type": "application/json",
           },
         }

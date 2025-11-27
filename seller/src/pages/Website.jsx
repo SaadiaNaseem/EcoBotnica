@@ -11,8 +11,8 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
 
         const stats = {
-        newUsers: { value: 156, change: 15.03 },
-        activeUsers: { value: 2318, change: 6.08 }
+        newUsers: { value: 15, change: 5.03 },
+        activeUsers: { value: 2, change: 3.08 }
     };
 
     const complaintsLine = {
@@ -88,14 +88,14 @@ const AdminDashboard = () => {
             </div>
 
             {/* ===== Bottom Section (Bar Chart) ===== */}
-            <div className="bg-green-50 p-4 rounded-xl shadow">
+            {/* <div className="bg-green-50 p-4 rounded-xl shadow">
                 <h3 className="font-semibold text-gray-800 mb-2">
                     Monthly Complaints: Registered vs Resolved
                 </h3>
                 <div className="w-full h-96 overflow-hidden">
                     <BarChartComp data={monthlyBars} />
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };

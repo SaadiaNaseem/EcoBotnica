@@ -1,4 +1,3 @@
-// context/plantIdentification.jsx - FIXED URL VERSION
 import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 
@@ -9,7 +8,6 @@ export const PlantIdentificationProvider = ({ children }) => {
   const [classificationResult, setClassificationResult] = useState(null);
   const [error, setError] = useState("");
 
-  // OPTIMIZED CLASSIFICATION FUNCTION
   const classifyImage = async (imageFile) => {
     setLoading(true);
     setError("");
@@ -21,151 +19,90 @@ export const PlantIdentificationProvider = ({ children }) => {
 
       console.log("🔍 Starting smart classification...");
 
-      // TEST BOTH MODELS IN PARALLEL
       let plantData = null;
       let flowerData = null;
       let plantError = null;
       let flowerError = null;
 
       try {
-        // Run both models in parallel for better performance
-        const [plantResponse, flowerResponse] = await Promise.all([
-          // FIXED: Use correct plant model URL
+        const [plantResponse, flowerResponse] = await Promise.allSettled([
           fetch("https://saira34-plant-model.hf.space/identify-plant", {
             method: "POST",
             body: formData,
-          }).catch(err => { throw new Error(`Plant model: ${err.message}`) }),
-          
-          // FIXED: Use correct flower model URL
+          }),
           fetch("https://saira34-flower-model.hf.space/identify-flower", {
             method: "POST",
             body: formData,
-          }).catch(err => { throw new Error(`Flower model: ${err.message}`) })
+          })
         ]);
 
-        // Parse responses
-        plantData = await plantResponse.json();
-        flowerData = await flowerResponse.json();
+        if (plantResponse.status === 'fulfilled' && plantResponse.value.ok) {
+          plantData = await plantResponse.value.json();
+          console.log("🌿 Plant Model:", plantData);
+        } else {
+          plantError = plantResponse.status === 'rejected' ? plantResponse.reason.message : 'Plant model failed';
+        }
 
-        console.log("🌿 Plant Model:", plantData);
-        console.log("🌸 Flower Model:", flowerData);
+        if (flowerResponse.status === 'fulfilled' && flowerResponse.value.ok) {
+          flowerData = await flowerResponse.value.json();
+          console.log("🌸 Flower Model:", flowerData);
+        } else {
+          flowerError = flowerResponse.status === 'rejected' ? flowerResponse.reason.message : 'Flower model failed';
+        }
 
       } catch (fetchError) {
         console.error("❌ Fetch Error:", fetchError);
-        // If parallel fails, try sequentially
-        try {
-          const plantResponse = await fetch("https://saira34-plant-model.hf.space/identify-plant", {
-            method: "POST",
-            body: formData,
-          });
-          plantData = await plantResponse.json();
-        } catch (err) {
-          plantError = err.message;
-        }
-
-        try {
-          // FIXED: Use correct flower model URL
-          const flowerResponse = await fetch("https://saira34-flower-model.hf.space/identify-flower", {
-            method: "POST",
-            body: formData,
-          });
-          flowerData = await flowerResponse.json();
-        } catch (err) {
-          flowerError = err.message;
-        }
       }
 
-      // 🎯 IMPROVED RESULT SELECTION LOGIC
       let finalResult = null;
+      let selectedModel = null;
 
-      // Priority 1: Plant model with good confidence
-      if (plantData?.success && plantData.confidence > 40) {
-        console.log("✅ Using Plant Model (high confidence)");
-        const detailedAnalysis = await getDetailedAnalysis({
-          type: "plant",
-          data: plantData,
-          confidence: plantData.confidence
-        });
+      const plantSuccess = plantData?.success && plantData.confidence > 30;
+      const flowerSuccess = flowerData?.success && flowerData.confidence > 30;
 
-        finalResult = {
-          success: true,
-          message: detailedAnalysis,
-          rawData: plantData,
-          modelUsed: "plant",
-          confidence: plantData.confidence,
-          detailedReport: detailedAnalysis,
-          plantType: plantData.plant_type,
-          debug: { plantModel: plantData, flowerModel: flowerData }
-        };
-      }
-      // Priority 2: Flower model with good confidence (if plant failed)
-      else if (flowerData?.success && flowerData.confidence > 60) {
+      if (plantSuccess && flowerSuccess) {
+        if (flowerData.confidence > plantData.confidence) {
+          console.log("✅ Choosing Flower Model (higher confidence)", flowerData.confidence, "vs", plantData.confidence);
+          selectedModel = { type: "flower", data: flowerData, confidence: flowerData.confidence };
+        } else {
+          console.log("✅ Choosing Plant Model (higher confidence)", plantData.confidence, "vs", flowerData.confidence);
+          selectedModel = { type: "plant", data: plantData, confidence: plantData.confidence };
+        }
+      } else if (flowerSuccess) {
         console.log("✅ Using Flower Model (plant failed)");
-        const detailedAnalysis = await getDetailedAnalysis({
-          type: "flower",
-          data: flowerData,
-          confidence: flowerData.confidence
-        });
+        selectedModel = { type: "flower", data: flowerData, confidence: flowerData.confidence };
+      } else if (plantSuccess) {
+        console.log("✅ Using Plant Model (flower failed)");
+        selectedModel = { type: "plant", data: plantData, confidence: plantData.confidence };
+      }
+
+      if (selectedModel) {
+        console.log("🎯 Selected Model:", selectedModel.type, "with confidence:", selectedModel.confidence);
+        
+        const detailedAnalysis = await getDetailedAnalysis(selectedModel);
 
         finalResult = {
           success: true,
           message: detailedAnalysis,
-          rawData: flowerData,
-          modelUsed: "flower",
-          confidence: flowerData.confidence,
+          rawData: selectedModel.data,
+          modelUsed: selectedModel.type,
+          confidence: selectedModel.confidence,
           detailedReport: detailedAnalysis,
-          flowerType: flowerData.prediction,
-          debug: { plantModel: plantData, flowerModel: flowerData }
-        };
-      }
-      // Priority 3: Plant model with low confidence but better than flower
-      else if (plantData?.success && (!flowerData?.success || plantData.confidence > flowerData.confidence)) {
-        console.log("⚠️ Using Plant Model (low confidence)");
-        const detailedAnalysis = await getDetailedAnalysis({
-          type: "plant",
-          data: plantData,
-          confidence: plantData.confidence
-        });
-
-        finalResult = {
-          success: true,
-          message: detailedAnalysis,
-          rawData: plantData,
-          modelUsed: "plant",
-          confidence: plantData.confidence,
-          detailedReport: detailedAnalysis,
-          plantType: plantData.plant_type,
-          debug: { plantModel: plantData, flowerModel: flowerData }
-        };
-      }
-      // Priority 4: Flower model as last resort
-      else if (flowerData?.success) {
-        console.log("⚠️ Using Flower Model (last resort)");
-        const detailedAnalysis = await getDetailedAnalysis({
-          type: "flower",
-          data: flowerData,
-          confidence: flowerData.confidence
-        });
-
-        finalResult = {
-          success: true,
-          message: detailedAnalysis,
-          rawData: flowerData,
-          modelUsed: "flower",
-          confidence: flowerData.confidence,
-          detailedReport: detailedAnalysis,
-          flowerType: flowerData.prediction,
-          debug: { plantModel: plantData, flowerModel: flowerData }
+          plantType: selectedModel.type === 'plant' ? selectedModel.data.plant_type : null,
+          flowerType: selectedModel.type === 'flower' ? selectedModel.data.prediction : null,
+          debug: { 
+            plantModel: plantData, 
+            flowerModel: flowerData,
+            selectionReason: `Chosen ${selectedModel.type} model with ${selectedModel.confidence}% confidence`
+          }
         };
       }
 
-      // If we found a result
       if (finalResult) {
         setClassificationResult(finalResult);
         return finalResult;
       }
 
-      // 🚨 NO SUITABLE RESULTS FOUND
       let errorMessage = "🔍 Unable to identify the plant or flower.\n\n";
 
       if (plantData && !plantData.success) {
@@ -210,146 +147,136 @@ export const PlantIdentificationProvider = ({ children }) => {
     }
   };
 
-  // IMPROVED getDetailedAnalysis with better error handling
+  // UPDATED PROMPT FOR STRUCTURED DATA
   const getDetailedAnalysis = async (bestResult) => {
     try {
-      const { type, data } = bestResult;
+      const { type, data, confidence } = bestResult;
       
       let identification = "";
-      let additionalInfo = "";
+      let plantName = "";
 
       if (type === "plant") {
-        identification = `Plant: ${data.plant_type || "Unknown Plant"}`;
-        additionalInfo = `Confidence: ${data.confidence}%`;
+        plantName = data.plant_type ? data.plant_type.replace(/_/g, ' ').toUpperCase() : "Unknown Plant";
+        identification = `Plant: ${plantName}`;
       } else if (type === "flower") {
-        const flowerName = data.prediction ? data.prediction.replace(/_/g, ' ').toUpperCase() : "Unknown Flower";
-        identification = `Flower: ${flowerName}`;
-        additionalInfo = `Confidence: ${data.confidence}%`;
+        plantName = data.prediction ? data.prediction.replace(/_/g, ' ').toUpperCase() : "Unknown Flower";
+        identification = `Flower: ${plantName}`;
       }
 
       console.log("🌿 Getting AI analysis for:", identification);
 
-      const fullPrompt = `You are a professional botanist and plant care expert. Provide a COMPREHENSIVE analysis of:
+      const fullPrompt = `You are a professional botanist. Analyze this ${type} and provide structured information:
 
-**IDENTIFIED PLANT/FLOWER:**
+**PLANT IDENTIFICATION:**
 ${identification}
-${additionalInfo}
+**Confidence Level:** ${confidence}%
 
-Please provide detailed information including:
-- Common and scientific names
-- Plant characteristics and appearance  
-- Optimal growing conditions
-- Care instructions (watering, sunlight, soil)
-- Propagation methods
-- Common uses and benefits
-- Toxicity information (if any)
-- Common problems and solutions
+Please provide information in this EXACT JSON format:
+{
+  "identification": {
+    "commonName": "Common name",
+    "scientificName": "Scientific name",
+    "family": "Plant family"
+  },
+  "characteristics": {
+    "description": "Physical description",
+    "height": "Typical height range",
+    "bloomingSeason": "When it blooms",
+    "lifespan": "Plant lifespan"
+  },
+  "growingConditions": {
+    "sunlight": "Sunlight requirements",
+    "water": "Watering needs",
+    "soil": "Soil type preferences",
+    "temperature": "Temperature range",
+    "humidity": "Humidity preferences"
+  },
+  "careInstructions": {
+    "watering": "Detailed watering instructions",
+    "fertilizing": "Fertilization schedule",
+    "pruning": "Pruning requirements",
+    "maintenance": "General maintenance tips"
+  },
+  "propagation": "Propagation methods",
+  "commonUses": ["Use 1", "Use 2", "Use 3"],
+  "toxicity": "Toxicity information for pets/humans",
+  "commonProblems": [
+    {
+      "problem": "Problem name",
+      "symptoms": "Symptoms description",
+      "solution": "Solution steps"
+    }
+  ],
+  "funFact": "An interesting fact about this plant"
+}
 
-Format the response in clear sections with emojis for better readability.`;
+Make sure the response is valid JSON only, no additional text.`;
 
       const aiRes = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
           model: "openai/gpt-3.5-turbo",
           messages: [{ role: "user", content: fullPrompt }],
-          max_tokens: 2000,
-          temperature: 0.7,
+          response_format: { type: "json_object" }
         },
         {
           headers: {
-            Authorization: "Bearer YOUR_API_KEY", // REPLACE WITH YOUR KEY
+            Authorization: "Bearer", // Add your key
             "Content-Type": "application/json",
           },
-          timeout: 30000, // 30 second timeout
         }
       );
 
-      return aiRes.data.choices[0].message.content;
+      // Parse the JSON response
+      const parsedData = JSON.parse(aiRes.data.choices[0].message.content);
+      return parsedData;
 
     } catch (error) {
       console.error("❌ OpenRouter Error:", error);
       
-      // Better fallback messages
-      if (bestResult.type === "plant") {
-        return `🌿 **PLANT IDENTIFIED!**\n\n**Plant:** ${bestResult.data.plant_type || "Unknown"}\n**Confidence:** ${bestResult.data.confidence}%\n\n*Plant identification successful! For detailed care instructions, try uploading a clearer image or consult a gardening expert.*`;
-      } else {
-        const flowerName = bestResult.data.prediction ? bestResult.data.prediction.replace(/_/g, ' ').toUpperCase() : "Unknown";
-        return `🌸 **FLOWER IDENTIFIED!**\n\n**Flower:** ${flowerName}\n**Confidence:** ${bestResult.data.confidence}%\n\n*Flower identification successful! For detailed care instructions, try uploading a clearer image or consult a gardening expert.*`;
-      }
-    }
-  };
+      // Fallback structured data
+      const { type, data, confidence } = bestResult;
+      const plantName = type === "plant" 
+        ? data.plant_type ? data.plant_type.replace(/_/g, ' ').toUpperCase() : "Unknown Plant"
+        : data.prediction ? data.prediction.replace(/_/g, ' ').toUpperCase() : "Unknown Flower";
 
-  // Test individual models
-  const testPlantModelOnly = async (imageFile) => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", imageFile);
-
-      console.log("🧪 Testing Plant Model Only");
-      
-      const response = await fetch("https://saira34-plant-model.hf.space/identify-plant", {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log("🧪 Plant Model Result:", data);
-      
       return {
-        success: data.success,
-        plantData: data,
-        rawResponse: data
+        identification: {
+          commonName: plantName,
+          scientificName: "Scientific name not available",
+          family: `${type.charAt(0).toUpperCase() + type.slice(1)} Family`
+        },
+        characteristics: {
+          description: `This appears to be a ${plantName}. Based on visual analysis, this ${type} shows typical characteristics.`,
+          height: "Varies by species",
+          bloomingSeason: "Seasonal",
+          lifespan: "Perennial"
+        },
+        growingConditions: {
+          sunlight: "Requires adequate sunlight",
+          water: "Moderate watering needed",
+          soil: "Well-draining soil recommended",
+          temperature: "Adaptable to various temperatures",
+          humidity: "Moderate humidity preferred"
+        },
+        careInstructions: {
+          watering: "Water when top soil feels dry",
+          fertilizing: "Fertilize during growing season",
+          pruning: "Prune as needed for shape and health",
+          maintenance: "Monitor for common plant diseases"
+        },
+        propagation: "Seeds, cuttings, or division",
+        commonUses: ["Ornamental gardening", "Landscaping"],
+        toxicity: "Generally non-toxic (verify with local experts)",
+        commonProblems: [
+          {
+            problem: "General Care",
+            symptoms: "Monitor plant health regularly",
+            solution: "Follow basic care instructions above"
+          }
+        ],
+        funFact: `Identified with ${confidence}% confidence using AI technology!`
       };
-    } catch (error) {
-      console.error("🧪 Plant Model Test Error:", error);
-      return {
-        success: false,
-        error: error.message
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const testFlowerModelOnly = async (imageFile) => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", imageFile);
-
-      console.log("🧪 Testing Flower Model Only");
-      
-      // FIXED: Use correct flower model URL
-      const response = await fetch("https://saira34-flower-model.hf.space/identify-flower", {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log("🧪 Flower Model Result:", data);
-      
-      return {
-        success: data.success,
-        flowerData: data,
-        rawResponse: data
-      };
-    } catch (error) {
-      console.error("🧪 Flower Model Test Error:", error);
-      return {
-        success: false,
-        error: error.message
-      };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -365,9 +292,7 @@ Format the response in clear sections with emojis for better readability.`;
         classificationResult,
         loading,
         error,
-        clearResults,
-        testPlantModelOnly,
-        testFlowerModelOnly
+        clearResults
       }}
     >
       {children}

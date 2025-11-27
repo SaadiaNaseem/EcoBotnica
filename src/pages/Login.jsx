@@ -33,7 +33,7 @@ const Login = () => {
 
         if (email === adminEmail && password === adminPassword) {
           toast.success('Admin login successful');
-          navigate('/admindashboard');   // ✅ direct admin dashboard
+window.location.href = 'http://localhost:5174/';
           return;
         } else {
           toast.error('Invalid admin credentials');

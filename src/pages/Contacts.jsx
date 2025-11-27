@@ -16,7 +16,6 @@ const Contacts = () => {
           <p className='font-semibold text-xl text-gray-600'>Get in Touch</p>
           <p className='text-gray-500'>EcoBotanica <br />123 Greenway Kashmir, Pakistan<br />Suite #12B, Kashmir</p>
           <p className='text-gray-500'>Phone: +1 (800) 123-4567<br />Email: support@ecobotanica.com</p>
-          <p className='font-semibold text-xl text-gray-600'>Work With Us</p>
           <p className='text-gray-500'>We’re always looking for nature-loving, tech-savvy individuals to join our team. Let’s grow together.</p>
           <button className='border border-black px-5 py-2 hover:bg-black hover:text-white transition-all duration-200'>
             Explore Jobs

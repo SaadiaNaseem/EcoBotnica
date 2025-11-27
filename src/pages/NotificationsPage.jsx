@@ -42,14 +42,14 @@ export default function NotificationsPage() {
               <Title text1="NOTIFICATION" text2="." />
             </div>
             <p className="mt-1 text-sm text-gray-500 md:text-base">
-              Plant care, community, and weather alerts — all in one place.
+              Plant care and weather alerts — all in one place.
             </p>
           </div>
         </div>
       </section>
 
       <section className="mb-5 flex flex-wrap items-center gap-2">
-        {["all", "plant-care", "community", "weather"].map((cat) => (
+        {["all", "plant-care", "weather"].map((cat) => (
           <Button
             key={cat}
             variant={filter === cat ? "default" : "secondary"}

@@ -31,7 +31,7 @@ Here is the plantation guide:
         },
         {
           headers: {
-            Authorization: "key here",
+            Authorization: "Bearer",
             "Content-Type": "application/json",
           },
         }
